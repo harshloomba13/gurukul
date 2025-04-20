@@ -1,20 +1,20 @@
 import warnings
 warnings.filterwarnings('ignore', message='.*OpenSSL.*')
 warnings.filterwarnings('ignore', message='.*resume_download.*')
+warnings.filterwarnings('ignore', category=UserWarning, module='transformers')
 
 # Use a pipeline as a high-level helper
 from transformers import pipeline, Conversation
 from sentence_transformers import SentenceTransformer, util
+#from datasets import load_dataset, load_from_disk
 import torch
 
 def chat_with_bot(user_message):
     chatbot = pipeline(task="conversational", model ="facebook/blenderbot-400M-distill")
-    user_message="""what are some fun activities i can do in winter"""
+    #user_message="""what are some fun activities i can do in winter"""
     conversation = Conversation(user_message)
-    conversation = chatbot(conversation)
-
-    conversation.add_message({"role": "user", "content":"what else do you recommend?"})
-    print(conversation)
+    conversation_1 = chatbot(conversation)
+    print(conversation_1)
 
 def translate_text(text, src_lang, tgt_lang):
     translator = pipeline(task="translation",
@@ -56,4 +56,5 @@ if __name__ == "__main__":
 
     #print(text_translated)
 
-    sentence_similarity()
+    #sentence_similarity()
+    chat_with_bot("hello world!")
