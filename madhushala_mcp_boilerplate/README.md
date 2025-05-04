@@ -1,0 +1,1 @@
+# Madhushala MCP Server Boilerplate
