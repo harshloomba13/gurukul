@@ -1,20 +1,38 @@
 
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def call_gpt(prompt: str) -> str:
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
 def invoke_graph(message: str) -> str:
-    if "book" in message.lower():
+    message_lower = message.lower()
+    if "book" in message_lower:
         return handle_booking(message)
-    elif "post" in message.lower() or "advertise" in message.lower():
+    elif "post" in message_lower or "advertise" in message_lower:
         return handle_advertisement(message)
-    elif "menu" in message.lower() or "writeup" in message.lower():
+    elif "menu" in message_lower or "writeup" in message_lower:
         return handle_writeup(message)
-    elif "remind" in message.lower() or "notify" in message.lower():
+    elif "remind" in message_lower or "notify" in message_lower:
         return handle_notification(message)
-    elif "todo" in message.lower() or "checklist" in message.lower():
+    elif "todo" in message_lower or "checklist" in message_lower:
         return handle_todo_list(message)
     else:
-        return "I'm here to help you with bookings, events, and reminders. How can I assist?"
+        return call_gpt("Reply helpfully to: " + message)
 
-def handle_booking(msg): return "✅ Booking created for your event. We'll follow up with confirmation."
-def handle_advertisement(msg): return "📣 Draft Instagram/WhatsApp post created. Ready to publish!"
-def handle_writeup(msg): return "🍽️ Here's a suggested menu and event writeup: Paneer Tikka, Kheer, and soulful poetry."
-def handle_notification(msg): return "🔔 Guests have been notified via WhatsApp and Email."
-def handle_todo_list(msg): return "📋 Organizer To-Do: Confirm caterer, test lights, print menus, cue sound check."
+def handle_booking(msg): return call_gpt(f"Take a booking request: '{msg}' and confirm it politely.")
+def handle_advertisement(msg): return call_gpt(f"Create a promotional Instagram + WhatsApp post for this event: {msg}")
+def handle_writeup(msg): return call_gpt(f"Suggest a menu and a poetic write-up for this event: {msg}")
+def handle_notification(msg): return call_gpt(f"Write a WhatsApp reminder message to guests about: {msg}")
+def handle_todo_list(msg): return call_gpt(f"Generate a checklist of things the event organizer needs to do before: {msg}")
