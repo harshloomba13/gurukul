@@ -13,6 +13,9 @@ from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, Too
 from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from IPython.display import Image
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+memory = SqliteSaver.from_conn_string(":memory:")
 
 client = OpenAI()
 prompt = """
@@ -117,7 +120,7 @@ class AgentState(TypedDict):
 
 class Agent_with_tools:
 
-    def __init__(self, model, tools, system=""):
+    def __init__(self, model, tools, checkpointer, system=""):
         self.system = system
         graph = StateGraph(AgentState)
         graph.add_node("llm", self.call_openai)
@@ -129,7 +132,7 @@ class Agent_with_tools:
         )
         graph.add_edge("action", "llm")
         graph.set_entry_point("llm")
-        self.graph = graph.compile()
+        self.graph = graph.compile(checkpointer=checkpointer)
         self.tools = {t.name: t for t in tools}
         self.model = model.bind_tools(tools)
 
@@ -158,11 +161,7 @@ class Agent_with_tools:
         print("Back to the model!")
         return {'messages': results}    
 
-if __name__ == "__main__":
-    #question = """I have 2 dogs, a border collie and a scottish terrier. \
-    #What is their combined weight"""
-    #print(query(question))
-    #dummy_tool()
+def search_tool():
     prompt = """You are a smart research assistant. Use the search engine to look up information. \
     You are allowed to make multiple calls (either together or in sequence). \
     Only look up information when you are sure of what you want. \
@@ -177,3 +176,132 @@ if __name__ == "__main__":
     messages = [HumanMessage(content="What is the weather in sf?")]
     result = abot.graph.invoke({"messages": messages})
     print(result['messages'][-1].content)
+
+def search_tool_advance():
+    prompt = """You are a smart research assistant. Use the search engine to look up information. \
+    You are allowed to make multiple calls (either together or in sequence). \
+    Only look up information when you are sure of what you want. \
+    If you need to look up some information before asking a follow up question, you are allowed to do that!
+    """
+    tool = TavilySearchResults(max_results=4, tavily_api_key=os.getenv("TAVILY_API_KEY")) #increased number of results
+    model = ChatOpenAI(model="gpt-3.5-turbo")  #reduce inference cost
+    abot = Agent_with_tools(model, [tool], system=prompt, checkpointer=memory)
+    #doesnt work with graphviz
+    #Image(abot.graph.get_graph().draw_png())
+
+    messages = [HumanMessage(content="What is the weather in sf?")]
+    thread = {"configurable": {"thread_id": "1"}}
+    for event in abot.graph.stream({"messages": messages}, thread):
+        for v in event.values():
+            print(v['messages'])
+    result = abot.graph.invoke({"messages": messages})
+    print(result['messages'][-1].content)
+    messages = [HumanMessage(content="What about in la?")]
+    thread = {"configurable": {"thread_id": "1"}}
+    for event in abot.graph.stream({"messages": messages}, thread):
+        for v in event.values():
+            print(v)
+
+def search(query, max_results=6):
+    # libraries
+    from dotenv import load_dotenv
+    import os
+    from tavily import TavilyClient
+    import requests
+    from bs4 import BeautifulSoup
+    from duckduckgo_search import DDGS
+    import re
+    # load environment variables from .env file
+    _ = load_dotenv()
+
+    # connect
+    client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY"))
+    # run search
+    result = client.search("What is in Nvidia's new Blackwell GPU?",
+                       include_answer=True)
+
+    ddg = DDGS()
+
+    try:
+        results = ddg.text(query, max_results=max_results)
+        return [i["href"] for i in results]
+    except Exception as e:
+        print(f"returning previous results due to exception reaching ddg.")
+        results = [ # cover case where DDG rate limits due to high deeplearning.ai volume
+            "https://weather.com/weather/today/l/USCA0987:1:US",
+            "https://weather.com/weather/hourbyhour/l/54f9d8baac32496f6b5497b4bf7a277c3e2e6cc5625de69680e6169e7e38e9a8",
+        ]
+        return results  
+
+def scrape_weather_info(url):
+    """Scrape content from the given URL"""
+    if not url:
+        return "Weather information could not be found."
+    
+    # fetch data
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        return "Failed to retrieve the webpage."
+
+    # parse result
+    soup = BeautifulSoup(response.text, 'html.parser')
+    return soup
+
+
+
+if __name__ == "__main__":
+    #search_tool()
+    # choose location (try to change to your own city!)
+    city = "San Francisco"
+
+    query = f"""
+        what is the current weather in {city}?
+        Should I travel there today?
+        "weather.com"
+    """
+    
+    for i in search(query):
+        print(i)
+    # use DuckDuckGo to find websites and take the first result
+    url = search(query)[0]
+
+    # scrape first wesbsite
+    soup = scrape_weather_info(url)
+
+    print(f"Website: {url}\n\n")
+    print(str(soup.body)[:50000]) # limit long outputs
+    # extract text
+    weather_data = []
+    for tag in soup.find_all(['h1', 'h2', 'h3', 'p']):
+        text = tag.get_text(" ", strip=True)
+        weather_data.append(text)
+
+    # combine all elements into a single string
+    weather_data = "\n".join(weather_data)
+
+    # remove all spaces from the combined text
+    weather_data = re.sub(r'\s+', ' ', weather_data)
+        
+    print(f"Website: {url}\n\n")
+    print(weather_data)
+    # run search
+    result = client.search(query, max_results=1)
+
+    # print first result
+    data = result["results"][0]["content"]
+
+    print(data)
+    import json
+    from pygments import highlight, lexers, formatters
+
+    # parse JSON
+    parsed_json = json.loads(data.replace("'", '"'))
+
+    # pretty print JSON with syntax highlighting
+    formatted_json = json.dumps(parsed_json, indent=4)
+    colorful_json = highlight(formatted_json,
+                            lexers.JsonLexer(),
+                            formatters.TerminalFormatter())
+
+    print(colorful_json)
