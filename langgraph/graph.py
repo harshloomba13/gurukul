@@ -1,10 +1,11 @@
-
 import os
+#del os.environ["OPENAI_API_KEY"]  # Clears cached var
 from dotenv import load_dotenv
+load_dotenv()
 from openai import OpenAI
 
-load_dotenv()
-openai = OpenAI(api_key='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')
+print("Environment variables loaded:", os.environ.get("OPENAI_API_KEY", "Not found"))
+openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "Not found"))
 
 def call_gpt(prompt: str) -> str:
     try:
