@@ -25,7 +25,7 @@ if prompt:
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                res = requests.post("http://localhost:8000/agent", json={"message": prompt})
+                res = requests.post("https://madhushala-api.onrender.com/agent", json={"message": prompt})
                 reply = res.json().get("response", "Sorry, something went wrong.")
             except Exception as e:
                 reply = f"❌ Error: {str(e)}"
