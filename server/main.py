@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.graph import invoke_graph
+from mcp_client import MCP_ChatBot
 import os
 
 # Debug print to show environment variables
@@ -33,5 +34,7 @@ def route_to_agent(msg: Message):
     return {"response": response}
 
 @app.get("/")
-def health_check():
+async def health_check():
+    chatbot = MCP_ChatBot()
+    await chatbot.connect_to_servers()  # Just connect, don't run chat loop
     return {"message": "Madhushala backend is running"}

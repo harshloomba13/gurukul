@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import os
@@ -25,8 +24,15 @@ if prompt:
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                #http://localhost:8000/agent
-                res = requests.post("https://madhushala-api.onrender.com/agent", json={"message": prompt})
+                headers = {
+                    "X-Api-Key": os.getenv("API_KEY"),  # Add API key from environment variable
+                    "Content-Type": "application/json"
+                }
+                res = requests.post(
+                    "https://madhushala-api.onrender.com/agent", 
+                    json={"message": prompt},
+                    headers=headers
+                )
                 reply = res.json().get("response", "Sorry, something went wrong.")
             except Exception as e:
                 reply = f"❌ Error: {str(e)}"

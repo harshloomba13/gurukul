@@ -1,0 +1,27 @@
+# AI Reasoning Research Summary
+
+## The Topic: AI Reasoning
+
+After exploring deeplearning.ai, I identified "AI Reasoning" as an interesting and current topic in artificial intelligence. The website's newsletter "The Batch" highlighted recent developments in reasoning capabilities for AI systems, including "Recipes For Reasoning" and "Easy Reasoning Hack" in their recent publications.
+
+## Papers Reviewed
+
+### Paper 1: "An Ontological AI-and-Law Framework for the Autonomous Levels of AI Legal Reasoning"
+- **Author**: Lance Eliot
+- **Published**: August 4, 2020
+- **Summary**: This paper proposes a framework defining seven autonomous levels for Artificial Intelligence and Legal Reasoning (AILR). The framework provides a systematic way to evaluate progress in applying AI to legal domains, useful for both academic researchers and legal professionals. The author aims to create a standardized approach to measure advancements in AI's legal reasoning capabilities, distinguishing between aspirational goals and actual achievements in the field.
+
+### Paper 2: "DeBiasMe: De-biasing Human-AI Interactions with Metacognitive AIED (AI in Education) Interventions"
+- **Author**: Chaeyeon Lim
+- **Published**: April 23, 2025
+- **Summary**: This position paper focuses on addressing human biases in interactions with generative AI in educational settings. The research advocates for metacognitive interventions to help university students critically engage with AI while being aware of biases like anchoring and confirmation bias. It proposes three key frameworks: (1) metacognitive support with deliberate friction, (2) bi-directional Human-AI interaction interventions, and (3) adaptive scaffolding based on user engagement patterns. The work introduces "DeBiasMe," an AI in Education (AIED) tool designed to enhance awareness of cognitive biases in AI interactions.
+
+## Conclusions
+
+AI reasoning represents a critical and evolving area in artificial intelligence with applications across various domains. The papers demonstrate two important aspects:
+
+1. The need for frameworks to evaluate and standardize AI reasoning capabilities, particularly in specialized domains like law.
+
+2. The importance of addressing human cognitive biases when reasoning with AI systems, especially in educational contexts.
+
+These papers show how AI reasoning research spans both technical frameworks and human-centered approaches, highlighting the multidisciplinary nature of this field. As deeplearning.ai's focus suggests, developing better reasoning capabilities in AI systems remains an active and important research direction in 2025 and beyond.

@@ -1,0 +1,76 @@
+```
+                        MODEL CONTEXT PROTOCOL (MCP) ARCHITECTURE
+                        =======================================
+
++-------------------------------------------------------------------------------------+
+|                                                                                     |
+|        +------------------+          CONNECTION FLOW           +------------------+ |
+|        |                  |                                    |                  | |
+|        |      HOST        |                                    |      SERVER      | |
+|        | (LLM Application)|                                    | (Context/Tools)  | |
+|        |                  |                                    |                  | |
+|        +--------+---------+                                    +---------+--------+ |
+|                 |                                                        |          |
+|                 |                                                        |          |
+|        +--------+---------+                1. Initialization  +----------+--------+ |
+|        |                  |<------------------------------------------>|            | |
+|        |      CLIENT      |  - initialize request (version, capabilities)           | |
+|        |                  |  - server response (version, capabilities)              | |
+|        |                  |  - initialized notification                             | |
+|        +--------+---------+                                    +------------------+ |
+|                 |                                                        |          |
+|                 |                                                        |          |
+|                 |                2. Message Exchange                     |          |
+|                 |<------------------------------------------>|           |          |
+|                 |  - Request-Response                                    |          |
+|                 |  - Notifications                                       |          |
+|                 |                                                        |          |
+|                 |                3. Termination                          |          |
+|                 |<------------------------------------------>|           |          |
+|                 |  - close(), disconnection, errors                      |          |
+|                 |                                                        |          |
++-----------------+--------------------------------------------------------+----------+
+
++-------------------+            CORE COMPONENTS              +-------------------+
+|                   |                                         |                   |
+| PROTOCOL LAYER    |                                         | TRANSPORT LAYER   |
+| ------------      |                                         | -------------     |
+| - Protocol        |                                         | - Stdio Transport |
+| - Client          |                                         | - HTTP with SSE   |
+| - Server          |                                         |                   |
+|                   |                                         |                   |
++-------------------+                                         +-------------------+
+
++-------------------+            MESSAGE TYPES                +-------------------+
+|                   |                                         |                   |
+| - Requests        |                                         | - Results         |
+| - Errors          |                                         | - Notifications   |
+|                   |                                         |                   |
++-------------------+                                         +-------------------+
+
++-------------------+            BEST PRACTICES               +-------------------+
+|                   |                                         |                   |
+| TRANSPORT         |                                         | MESSAGE HANDLING  |
+| ------------      |                                         | --------------    |
+| - Local: stdio    |                                         | - Input validation|
+| - Remote: SSE     |                                         | - Error handling  |
+|                   |                                         | - Progress reports|
++-------------------+                                         +-------------------+
+
++-------------------+            SECURITY                     +-------------------+
+|                   |                                         |                   |
+| - TLS for remote  |                                         | - Input validation|
+| - Auth as needed  |                                         | - Resource limits |
+| - Origin validation|                                        | - Access controls |
+| - Error handling  |                                         | - DoS protection  |
+|                   |                                         |                   |
++-------------------+                                         +-------------------+
+
++-------------------+            MONITORING                   +-------------------+
+|                   |                                         |                   |
+| - Logging         |                                         | - Diagnostics     |
+| - Error tracking  |                                         | - Health checks   |
+| - Performance     |                                         | - Testing         |
+|                   |                                         |                   |
++-------------------+                                         +-------------------+
+```
