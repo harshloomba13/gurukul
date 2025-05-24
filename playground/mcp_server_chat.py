@@ -159,8 +159,7 @@ def execute_tool(tool_name, tool_args):
     return result
 
 
-client = anthropic.Anthropic(api_key='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')
-
+client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", "Not found"))
 
 def process_query(query):
     
