@@ -36,5 +36,5 @@ def route_to_agent(msg: Message):
 @app.get("/")
 async def health_check():
     chatbot = MCP_ChatBot()
-    await chatbot.connect_to_servers()  # Just connect, don't run chat loop
+    await chatbot.connect_to_server()  # Just connect without running chat loop
     return {"message": "Madhushala backend is running"}
