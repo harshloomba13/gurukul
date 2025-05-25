@@ -28,12 +28,13 @@ class MCP_ChatBot:
                                       model = 'claude-3-7-sonnet-20250219', 
                                       tools = self.available_tools, # tools exposed to the LLM
                                       messages = messages)
+        print(f"first response - {response}")
         process_query = True
         while process_query:
             assistant_content = []
             for content in response.content:
                 if content.type =='text':
-                    print(content.text)
+                    print(f"content - {content.text}")
                     assistant_content.append(content)
                     if(len(response.content) == 1):
                         process_query= False
@@ -66,31 +67,29 @@ class MCP_ChatBot:
                     
                     if(len(response.content) == 1 and response.content[0].type == "text"):
                         print(response.content[0].text)
-                        return response.content[0].text
                         process_query= False
-
+        print(f"assistant content - {assistant_content[0].text}")
+        return assistant_content[0].text
     
     
-    async def chat_loop(self):
+    async def chat_loop(self, messages):
         """Run an interactive chat loop"""
         print("\nMCP Chatbot Started!")
         print("Type your queries or 'quit' to exit.")
         
-        while True:
-            try:
-                query = input("\nQuery: ").strip()
-        
+        try:
+                query = messages
                 if query.lower() == 'quit':
-                    break
+                    return "Goodbye!"
                     
                 response = await self.process_query(query)
                 return response
                 print("\n")
                     
-            except Exception as e:
+        except Exception as e:
                 print(f"\nError: {str(e)}")
     
-    async def connect_to_server_and_run(self):
+    async def connect_to_server_and_run(self, messages):
         print("in server!")
         # Create server parameters for stdio connection
         server_params = StdioServerParameters(
@@ -116,36 +115,10 @@ class MCP_ChatBot:
                     "input_schema": tool.inputSchema
                 } for tool in response.tools]
     
-                response = await self.chat_loop()
+                response = await self.chat_loop(messages)
+                print(f"response - {response}")
                 return response
                 print("chat loop!!")
-
-    async def connect_to_server(self):
-        """Connect to the MCP server without running the chat loop"""
-        # Create server parameters for stdio connection
-        server_params = StdioServerParameters(
-            command="python",  # Executable
-            args=["mcp_server.py"],  # Optional command line arguments
-            env=None,  # Optional environment variables
-        )
-        async with stdio_client(server_params) as (read, write):
-            async with ClientSession(read, write) as session:
-                self.session = session
-                # Initialize the connection
-                await session.initialize()
-    
-                # List available tools
-                response = await session.list_tools()
-                
-                tools = response.tools
-                print("\nConnected to server with tools:", [tool.name for tool in tools])
-                
-                self.available_tools = [{
-                    "name": tool.name,
-                    "description": tool.description,
-                    "input_schema": tool.inputSchema
-                } for tool in response.tools]
-
 
 async def main():
     chatbot = MCP_ChatBot()
