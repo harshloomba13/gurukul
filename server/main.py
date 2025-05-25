@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from langgraph.graph import invoke_graph
+from local_graph.graph import invoke_graph
 from mcp_client import MCP_ChatBot
 import os
 
@@ -29,8 +29,8 @@ class Message(BaseModel):
     message: str
 
 @app.post("/agent")
-def route_to_agent(msg: Message):
-    response = invoke_graph(msg.message)
+async def route_to_agent(msg: Message):
+    response = await invoke_graph(msg.message)
     return {"response": response}
 
 @app.get("/")
