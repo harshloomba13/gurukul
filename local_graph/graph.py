@@ -17,7 +17,7 @@ async def call_gpt(prompt: str) -> str:
         #return response.choices[0].message.content.strip()
         chatbot = MCP_ChatBot()
         response = await chatbot.connect_to_server_and_run(messages=prompt)  # Just connect without running chat loop
-        print(f"response - {response}")
+        print(f"response :{response}")
         return response
     except Exception as e:
         return f"❌ Error: {str(e)}"

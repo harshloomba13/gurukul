@@ -84,7 +84,6 @@ class MCP_ChatBot:
                     
                 response = await self.process_query(query)
                 return response
-                print("\n")
                     
         except Exception as e:
                 print(f"\nError: {str(e)}")
