@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 from openai import OpenAI
+from mcp_client import MCP_ChatBot
 
 print("Environment variables loaded:", os.environ.get("OPENAI_API_KEY", "Not found"))
 openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "Not found"))
@@ -16,6 +17,7 @@ async def call_gpt(prompt: str) -> str:
         #return response.choices[0].message.content.strip()
         chatbot = MCP_ChatBot()
         response = await chatbot.connect_to_server_and_run()  # Just connect without running chat loop
+        print(f"response - {response}")
         return response
     except Exception as e:
         return f"❌ Error: {str(e)}"
