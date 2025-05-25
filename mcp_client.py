@@ -66,6 +66,7 @@ class MCP_ChatBot:
                     
                     if(len(response.content) == 1 and response.content[0].type == "text"):
                         print(response.content[0].text)
+                        return response.content[0].text
                         process_query= False
 
     
@@ -82,7 +83,8 @@ class MCP_ChatBot:
                 if query.lower() == 'quit':
                     break
                     
-                await self.process_query(query)
+                response = await self.process_query(query)
+                return response
                 print("\n")
                     
             except Exception as e:
@@ -114,7 +116,8 @@ class MCP_ChatBot:
                     "input_schema": tool.inputSchema
                 } for tool in response.tools]
     
-                await self.chat_loop()
+                response = await self.chat_loop()
+                return response
                 print("chat loop!!")
 
     async def connect_to_server(self):

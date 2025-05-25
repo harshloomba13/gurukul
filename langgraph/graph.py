@@ -7,13 +7,16 @@ from openai import OpenAI
 print("Environment variables loaded:", os.environ.get("OPENAI_API_KEY", "Not found"))
 openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "Not found"))
 
-def call_gpt(prompt: str) -> str:
+async def call_gpt(prompt: str) -> str:
     try:
-        response = openai.chat.completions.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
+        #response = openai.chat.completions.create(
+        #    model="gpt-4",
+        #    messages=[{"role": "user", "content": prompt}]
+        #)
+        #return response.choices[0].message.content.strip()
+        chatbot = MCP_ChatBot()
+        response = await chatbot.connect_to_server_and_run()  # Just connect without running chat loop
+        return response
     except Exception as e:
         return f"❌ Error: {str(e)}"
 
