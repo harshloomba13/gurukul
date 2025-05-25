@@ -4,6 +4,7 @@ import os
 from typing import List
 from dotenv import load_dotenv
 import anthropic
+from aiohttp import ClientSession
 
 PAPER_DIR = "papers"
 
@@ -159,7 +160,16 @@ def execute_tool(tool_name, tool_args):
     return result
 
 
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", "Not found"))
+class MCP_Server_Chat:
+    def __init__(self):
+        # Initialize session and client objects
+        self.session: ClientSession = None
+        # Get API key from environment variable
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+        self.anthropic = anthropic.Anthropic(api_key=api_key)
+        self.available_tools: List[dict] = []
 
 def process_query(query):
     

@@ -6,6 +6,8 @@ from contextlib import AsyncExitStack
 import json
 import asyncio
 import nest_asyncio
+import os
+from typing import List
 
 nest_asyncio.apply()
 
@@ -14,7 +16,11 @@ load_dotenv()
 class MCP_ChatBot:
     def __init__(self):
         self.exit_stack = AsyncExitStack()
-        self.anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", "Not found"))
+        # Get API key from environment variable
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+        self.anthropic = Anthropic(api_key=api_key)
         # Tools list required for Anthropic API
         self.available_tools = []
         # Prompts list for quick display 
