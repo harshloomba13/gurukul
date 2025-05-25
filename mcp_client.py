@@ -15,7 +15,11 @@ class MCP_ChatBot:
     def __init__(self):
         # Initialize session and client objects
         self.session: ClientSession = None
-        self.anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", "Not found"))
+        # Get API key from environment variable
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+        self.anthropic = Anthropic(api_key=api_key)
         self.available_tools: List[dict] = []
 
     async def process_query(self, query):
@@ -112,6 +116,32 @@ class MCP_ChatBot:
     
                 await self.chat_loop()
                 print("chat loop!!")
+
+    async def connect_to_server(self):
+        """Connect to the MCP server without running the chat loop"""
+        # Create server parameters for stdio connection
+        server_params = StdioServerParameters(
+            command="python",  # Executable
+            args=["mcp_server.py"],  # Optional command line arguments
+            env=None,  # Optional environment variables
+        )
+        async with stdio_client(server_params) as (read, write):
+            async with ClientSession(read, write) as session:
+                self.session = session
+                # Initialize the connection
+                await session.initialize()
+    
+                # List available tools
+                response = await session.list_tools()
+                
+                tools = response.tools
+                print("\nConnected to server with tools:", [tool.name for tool in tools])
+                
+                self.available_tools = [{
+                    "name": tool.name,
+                    "description": tool.description,
+                    "input_schema": tool.inputSchema
+                } for tool in response.tools]
 
 
 async def main():
