@@ -12,7 +12,7 @@ from instagrapi import Client as InstaClient
 
 # --- Configuration ---
 
-anu_whatsapp=os.environ.get("ANU_WH#ATSAPP")
+anu_whatsapp=os.environ.get("ANU_WHATSAPP")
 twilio_sid = os.environ.get("TWILIO_SID") 
 twilio_token = os.environ.get("TWILIO_TOKEN")
 twilio_whatsapp_number = os.environ.get("TWILIO_WHATSAPP_NUMBER")
