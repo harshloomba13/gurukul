@@ -6,11 +6,40 @@ from mcp.server.fastmcp import FastMCP
 import asyncio
 from fastapi import Request
 from sse_starlette.sse import EventSourceResponse
+from anthropic import Anthropic
+from twilio.rest import Client as TwilioClient
+from instagrapi import Client as InstaClient
+
+# --- Configuration ---
+
+anu_whatsapp=os.environ.get("ANU_WH#ATSAPP")
+twilio_sid = os.environ.get("TWILIO_SID") 
+twilio_token = os.environ.get("TWILIO_TOKEN")
+twilio_whatsapp_number = os.environ.get("TWILIO_WHATSAPP_NUMBER")
+instagram_username = os.environ.get("INSTAGRAM_USERNAME")
+instagram_password = os.environ.get("INSTAGRAM_PASSWORD")
 
 PAPER_DIR = "papers"
 
 # Initialize FastMCP server
 mcp = FastMCP("research", transport="stdio")
+
+# Add FastAPI for HTTP endpoints
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class MessageRequest(BaseModel):
+    message: str
 
 @mcp.tool()
 def search_papers(topic: str, max_results: int = 5) -> List[str]:
@@ -188,5 +217,120 @@ def generate_search_prompt(topic: str, num_papers: int = 5) -> str:
     Please present both detailed information about each paper and a high-level synthesis of the research landscape in {topic}."""  
 
 
+# --- Helper functions ---
+def call_gpt(prompt):
+    # Replace with actual GPT call logic
+    # Get API key from environment variable
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+    anthropic = Anthropic(api_key=api_key)
+    messages = [{'role':'user', 'content':prompt}]
+    response = anthropic.messages.create(max_tokens = 2024,
+                                      model = 'claude-3-5-sonnet-20241022', 
+                                      messages = messages)
+    return response.content[0].text
+
+def send_to_whatsapp(to_number, message):
+    if not message or len(message.strip()) == 0:
+        print("=== Debug: Empty message, skipping WhatsApp send ===")
+        return
+    
+    # Truncate message if it's too long for WhatsApp (1600 char limit)
+    if len(message) > 1500:  # Leave some buffer
+        message = message[:1500] + "..."
+        print(f"=== Debug: Message truncated to {len(message)} characters ===")
+    
+    client = TwilioClient(twilio_sid, twilio_token)
+    client.messages.create(body=message, from_=twilio_whatsapp_number, to=to_number)
+
+def post_to_instagram(caption):
+    cl = InstaClient()
+    cl.login(instagram_username, instagram_password)
+    cl.photo_upload("/Users/harshloomba/Documents/gurukul/image.jpeg", caption)  # Placeholder image
+
+def postprocess_and_route(tool_name, content):
+    if tool_name in ["handle_booking", "handle_notification", "handle_todo_list"]:
+        send_to_whatsapp(anu_whatsapp, content)
+    elif tool_name == "handle_advertisement":
+        post_to_instagram(content)
+        #send_to_whatsapp(anu_whatsapp, content)
+    elif tool_name == "handle_writeup":
+        send_to_whatsapp(anu_whatsapp, content)
+
+@mcp.tool(name="handle_advertisement", description="Create a promotional Instagram + WhatsApp post for the event.")
+def handle_advertisement(msg: str) -> str:
+    result = call_gpt(f"Create a promotional Instagram + WhatsApp post for this event: {msg}")
+    postprocess_and_route("handle_advertisement", result)
+    return result
+
+@mcp.tool(name="handle_writeup", description="Suggest a menu and poetic write-up for the event.")
+def handle_writeup(msg: str) -> str:
+    print("=== Debug: Entering handle_writeup ===")
+    print(f"Message received: {msg}")
+    result = call_gpt(f"Suggest a menu and a poetic write-up for this event: {msg}")
+    print("=== Debug: GPT response received ===")
+    postprocess_and_route("handle_writeup", result)
+    print("=== Debug: Exiting handle_writeup ===")
+    return result
+
+
+@mcp.tool(name="handle_notification", description="Write a WhatsApp reminder message to guests.")
+def handle_notification(msg: str) -> str:
+    result = call_gpt(f"Write a WhatsApp reminder message to guests about: {msg}")
+    postprocess_and_route("handle_notification", result)
+    return result
+
+@mcp.tool(name="handle_todo_list", description="Generate a to-do list for the event organizer.")
+def handle_todo_list(msg: str) -> str:
+    result = call_gpt(f"Generate a checklist of things the event organizer needs to do before: {msg}")
+    postprocess_and_route("handle_todo_list", result)
+    return result
+
+@mcp.tool(name="handle_booking", description="Handle event booking and reservation requests.")
+def handle_booking(msg: str) -> str:
+    result = call_gpt(f"Create a booking confirmation or response for: {msg}")
+    postprocess_and_route("handle_booking", result)
+    return result
+
+
+
+# HTTP endpoints for cloud deployment
+@app.post("/agent")
+async def handle_agent_request(request: MessageRequest):
+    """Handle agent requests via HTTP"""
+    message = request.message.lower()
+    
+    try:
+        if any(word in message for word in ["advertise", "advertisement", "promote", "marketing", "social media"]):
+            result = handle_advertisement(request.message)
+        elif any(word in message for word in ["menu", "food", "writeup", "poetic", "feast", "cuisine"]):
+            result = handle_writeup(request.message)
+        elif any(word in message for word in ["notify", "reminder", "guests", "whatsapp"]):
+            result = handle_notification(request.message)
+        elif any(word in message for word in ["todo", "checklist", "organizer", "tasks"]):
+            result = handle_todo_list(request.message)
+        elif any(word in message for word in ["booking", "reservation", "book"]):
+            result = handle_booking(request.message)
+        elif any(word in message for word in ["search", "papers", "research"]):
+            # Extract topic from message - simple approach
+            words = request.message.split()
+            topic = " ".join(words[2:]) if len(words) > 2 else "quantum computing"
+            result = search_papers(topic)
+        else:
+            # Default to writeup
+            result = handle_writeup(request.message)
+            
+        return {"response": result}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+#mcp dev mcp_server.py
 if __name__ == "__main__":
-    mcp.run()
+    import uvicorn
+    # Run HTTP server for cloud deployment
+    uvicorn.run(app, host="0.0.0.0", port=8000)

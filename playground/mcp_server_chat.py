@@ -239,4 +239,4 @@ def chat_loop():
             print("\n")
         except Exception as e:
             print(f"\nError: {str(e)}")
-#chat_loop()
+chat_loop()
