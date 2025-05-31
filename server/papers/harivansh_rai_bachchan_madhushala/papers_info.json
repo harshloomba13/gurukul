@@ -1,0 +1,67 @@
+{
+  "2211.04250v1": {
+    "title": "DetAIL : A Tool to Automatically Detect and Analyze Drift In Language",
+    "authors": [
+      "Nishtha Madaan",
+      "Adithya Manjunatha",
+      "Hrithik Nambiar",
+      "Aviral Kumar Goel",
+      "Harivansh Kumar",
+      "Diptikalyan Saha",
+      "Srikanta Bedathur"
+    ],
+    "summary": "Machine learning and deep learning-based decision making has become part of\ntoday's software. The goal of this work is to ensure that machine learning and\ndeep learning-based systems are as trusted as traditional software. Traditional\nsoftware is made dependable by following rigorous practice like static\nanalysis, testing, debugging, verifying, and repairing throughout the\ndevelopment and maintenance life-cycle. Similarly for machine learning systems,\nwe need to keep these models up to date so that their performance is not\ncompromised. For this, current systems rely on scheduled re-training of these\nmodels as new data kicks in. In this work, we propose to measure the data drift\nthat takes place when new data kicks in so that one can adaptively re-train the\nmodels whenever re-training is actually required irrespective of schedules. In\naddition to that, we generate various explanations at sentence level and\ndataset level to capture why a given payload text has drifted.",
+    "pdf_url": "http://arxiv.org/pdf/2211.04250v1",
+    "published": "2022-11-03"
+  },
+  "1512.08917v2": {
+    "title": "Gaia reference frame amid quasar variability and proper motion patterns in the data",
+    "authors": [
+      "R. K. Bachchan",
+      "D. Hobbs",
+      "L. Lindegren"
+    ],
+    "summary": "Gaia's very accurate astrometric measurements will allow the International\nCelestial Reference Frame (ICRF) to be improved by a few orders of magnitude in\nthe optical. Several sets of quasars are used to define a kinematically stable\nnon-rotating reference frame with the barycentre of the Solar System as its\norigin. Gaia will also observe a large number of galaxies which could obtain\naccurate positions and proper motions although they are not point-like. The\noptical stability of the quasars is critical and we investigate how accurately\nthe reference frame can be recovered. Various proper motion patterns are also\npresent in the data, the best known is caused by the acceleration of the Solar\nSystem Barycentre, presumably, towards the Galactic centre. We review some\nother less-well-known effects that are not part of standard astrometric models.\nWe model quasars and galaxies using realistic sky distributions, magnitudes and\nredshifts. Position variability is introduced using a Markov chain model. The\nreference frame is determined using the algorithm developed for the Gaia\nmission which also determines the acceleration of the Solar System. We also\ntest a method to measure the velocity of the Solar System barycentre in a\ncosmological frame. We simulate the recovery of the reference frame and the\nacceleration of the Solar System and conclude that they are not significantly\ndisturbed in the presence of quasar variability which is statistically\naveraged. However, the effect of a non-uniform sky distribution of the quasars\ncan result in a correlation between the reference frame and acceleration which\ndegrades the solution. Our results suggest that an attempt should be made to\nastrometrically determine the redshift dependent apparent drift of galaxies due\nto our velocity relative to the CMB, which in principle could allow the\ndetermination of the Hubble parameter.",
+    "pdf_url": "http://arxiv.org/pdf/1512.08917v2",
+    "published": "2015-12-30"
+  },
+  "2212.07022v1": {
+    "title": "Forming Blue Compact Dwarf Galaxy (BCD) through Mergers",
+    "authors": [
+      "Daya Nidhi Chhatkuli",
+      "Sanjaya Paudel",
+      "Rajesh Kumar Bachchan",
+      "Binil Aryal",
+      "Jaewon Yoo"
+    ],
+    "summary": "It has long been speculated that Blue Compact Dwarf galaxies (BCDs) are\nformed through the interaction between low-mass gas-rich galaxies, but a few\ncandidates of such systems have been studied in detail. We study a sample of\ncompact star-forming dwarf galaxies that are selected from a merging dwarf\ngalaxy catalog. We present a detailed study of their spectroscopic and\nstructural properties. We find that these BCDs looking galaxies host extended\nstellar shells and thus are confirmed to be a dwarf-dwarf merger. Their stellar\nmasses range between $8\\times10^7$~M$_{\\sun}$ and $2\\times10^9$~M$_{\\sun}$.\nAlthough the extended tail and shell are prominent in the deep optical images,\nthe overall major axis light profile is well modeled with a two-component\nS\\'ersic function of inner compact and extended outer radii. We calculate the\ninner and outer component stellar-mass ratio using the two-component modeling.\nWe find an average ratio of 4:1 (with a range of 10:1 to 2:1) for our sample,\nindicating that the central component dominates the stellar mass with an\nongoing burst of star-formation. From the measurement of H$_\\alpha$ equivalent\nwidth, we derived the star-formation ages of these galaxies. The derived\nstar-formation ages of these galaxies turn out to be in the order of a few 10\nMyr, suggesting the recent ignition of star-formation due to events of\nsatellite interaction.",
+    "pdf_url": "http://arxiv.org/pdf/2212.07022v1",
+    "published": "2022-12-14"
+  },
+  "2112.11272v2": {
+    "title": "X-ray timing and spectral variability properties of blazars S5 0716+714, OJ 287, Mrk 501, and RBS 2070",
+    "authors": [
+      "Maksym Mohorian",
+      "Gopal Bhatta",
+      "Tek P. Adhikari",
+      "Niraj Dhital",
+      "Radim P\u00e1nis",
+      "Adithiya Dinesh",
+      "Suvas C. Chaudhary",
+      "Rajesh K. Bachchan",
+      "Zde\u0148ek Stuchl\u00edk"
+    ],
+    "summary": "The X-ray emission from blazars has been widely investigated using several\nspace telescopes. In this work, we explored statistical properties of the X-ray\nvariability in the blazars S5 0716+714, OJ 287, Mkn 501 and RBS 2070 using the\narchival observations from the XMM-Newton telescope between the period\n2002-2020. Several methods of timing and spectral analyses including fractional\nvariability, minimum variability timescale, power spectral density analyses and\ncountrate distribution were performed. In addition, we fitted various spectral\nmodels to the observations as well as estimated hardness ratio. The results\nshow that the sources are moderately variable within the intra-day timescale.\nThree of the four sources exhibited a clear bi-modal pattern in their countrate\ndistribution revealing possible indication of two distinct countrate states,\nthat is, hard and soft countrate states. The slope indices of the power\nspectral density were found to be centered around 0.5. Furthermore, the spectra\nof the sources were fitted with single power-law, broken power-law,\nlog-parabolic and black-body+log-parabolic models (the latter only for OJ 287).\nWe conclude that for most of the observations log-parabolic model was the best\nfit. The power spectral density analysis revealed the variable nature of PSD\nslopes in the source light curves. The results of this analysis could indicate\nthe non-stationary nature of the blazar processes on intra-day timescales. The\nobserved features can be explained within the context of current blazar models,\nin which the non-thermal emission mostly arises from kilo-parsec scale\nrelativistic jets.",
+    "pdf_url": "http://arxiv.org/pdf/2112.11272v2",
+    "published": "2021-12-21"
+  },
+  "1111.2735v2": {
+    "title": "The IceCube Neutrino Observatory III: Cosmic Rays",
+    "authors": [
+      "The IceCube Collaboration"
+    ],
+    "summary": "Cosmic rays and related measurements: IceTop overview; IceTop calibration;\nCosmic ray composition; Air shower measurements; Studies of cosmic ray muons;\nStudies of PeV gamma rays; Cosmic ray anisotropy; Forbush decrease; Submitted\npapers to the 32nd International Cosmic Ray Conference, Beijing 2011.",
+    "pdf_url": "http://arxiv.org/pdf/1111.2735v2",
+    "published": "2011-11-11"
+  }
+}
