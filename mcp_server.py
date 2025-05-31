@@ -247,7 +247,7 @@ def send_to_whatsapp(to_number, message):
 def post_to_instagram(caption):
     cl = InstaClient()
     cl.login(instagram_username, instagram_password)
-    cl.photo_upload("/Users/harshloomba/Documents/gurukul/image.jpeg", caption)  # Placeholder image
+    cl.photo_upload("image.jpeg", caption)  # Using relative path
 
 def postprocess_and_route(tool_name, content):
     if tool_name in ["handle_booking", "handle_notification", "handle_todo_list"]:
