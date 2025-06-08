@@ -68,8 +68,13 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     # Try to load existing papers info
     try:
         with open(file_path, "r") as json_file:
-            papers_info = json.load(json_file)
-    except (FileNotFoundError, json.JSONDecodeError):
+            content = json_file.read().strip()
+            if not content:
+                papers_info = {}
+            else:
+                papers_info = json.loads(content)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"=== Debug: JSON error in search_papers: {str(e)} ===")
         papers_info = {}
 
     # Process each paper and add to papers_info  
@@ -208,23 +213,31 @@ def generate_search_prompt(topic: str, num_papers: int = 5) -> str:
 
 # --- Helper functions ---
 def call_gpt(prompt):
-    # Replace with actual GPT call logic
-    # Get API key from environment variable
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
-    anthropic = Anthropic(api_key=api_key)
-    messages = [{'role':'user', 'content':prompt}]
-    response = anthropic.messages.create(max_tokens = 2024,
-                                      model = 'claude-3-5-sonnet-20241022', 
-                                      messages = messages)
-    return response.content[0].text
+    try:
+        # Get API key from environment variable
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+                raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+        anthropic = Anthropic(api_key=api_key)
+        messages = [{'role':'user', 'content':prompt}]
+        response = anthropic.messages.create(max_tokens = 2024,
+                                          model = 'claude-3-5-sonnet-20241022', 
+                                          messages = messages)
+        return response.content[0].text
+    except Exception as e:
+        print(f"=== Debug: GPT API error: {str(e)} ===")
+        return f"Error generating content: {str(e)}"
 
 def send_to_whatsapp(to_number, message):
     try:
         if not message or len(message.strip()) == 0:
             print("=== Debug: Empty message, skipping WhatsApp send ===")
             return
+        
+        print(f"=== Debug: Twilio SID: {twilio_sid[:10] if twilio_sid else 'None'}... ===")
+        print(f"=== Debug: Twilio Token: {twilio_token if twilio_token else 'None'} ===")
+        print(f"=== Debug: WhatsApp Number: {twilio_whatsapp_number} ===")
+        print(f"=== Debug: To Number: {to_number} ===")
         
         if not all([twilio_sid, twilio_token, twilio_whatsapp_number, to_number]):
             print("=== Debug: Missing Twilio credentials, skipping WhatsApp send ===")
