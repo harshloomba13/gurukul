@@ -232,22 +232,44 @@ def call_gpt(prompt):
     return response.content[0].text
 
 def send_to_whatsapp(to_number, message):
-    if not message or len(message.strip()) == 0:
-        print("=== Debug: Empty message, skipping WhatsApp send ===")
-        return
-    
-    # Truncate message if it's too long for WhatsApp (1600 char limit)
-    if len(message) > 1500:  # Leave some buffer
-        message = message[:1500] + "..."
-        print(f"=== Debug: Message truncated to {len(message)} characters ===")
-    
-    client = TwilioClient(twilio_sid, twilio_token)
-    client.messages.create(body=message, from_=twilio_whatsapp_number, to=to_number)
+    try:
+        if not message or len(message.strip()) == 0:
+            print("=== Debug: Empty message, skipping WhatsApp send ===")
+            return
+        
+        if not all([twilio_sid, twilio_token, twilio_whatsapp_number, to_number]):
+            print("=== Debug: Missing Twilio credentials, skipping WhatsApp send ===")
+            return
+        
+        # Truncate message if it's too long for WhatsApp (1600 char limit)
+        if len(message) > 1500:  # Leave some buffer
+            message = message[:1500] + "..."
+            print(f"=== Debug: Message truncated to {len(message)} characters ===")
+        
+        client = TwilioClient(twilio_sid, twilio_token)
+        client.messages.create(body=message, from_=twilio_whatsapp_number, to=to_number)
+        print("=== Debug: WhatsApp message sent successfully ===")
+    except Exception as e:
+        print(f"=== Debug: WhatsApp error: {str(e)} ===")
+        # Don't raise the error, just log it
 
 def post_to_instagram(caption):
-    cl = InstaClient()
-    cl.login(instagram_username, instagram_password)
-    cl.photo_upload("image.jpeg", caption)  # Using relative path
+    try:
+        print("=== Debug: Attempting Instagram login ===")
+        cl = InstaClient()
+        cl.login(instagram_username, instagram_password)
+        
+        # Check if image file exists, if not skip image upload
+        import os
+        if not os.path.exists("image.jpeg"):
+            print("=== Debug: No image file found, skipping Instagram post ===")
+            return
+            
+        cl.photo_upload("image.jpeg", caption)
+        print("=== Debug: Instagram post successful ===")
+    except Exception as e:
+        print(f"=== Debug: Instagram error: {str(e)} ===")
+        # Don't raise the error, just log it
 
 def postprocess_and_route(tool_name, content):
     if tool_name in ["handle_booking", "handle_notification", "handle_todo_list"]:
