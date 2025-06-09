@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from anthropic import Anthropic
-from mcp import ClientSession, types
+from mcp import ClientSession
 from mcp.client.sse import sse_client
 from typing import List
 import asyncio
@@ -117,8 +117,8 @@ class MCP_ChatBot:
     
     async def connect_to_server_and_run(self, messages):
         print("=== Debug: Starting HTTP server connection ===")
-        # Connect to HTTP server (assumes server is running on localhost:8000)
-        server_url = "https://madhushala-api.onrender.com"
+        # Connect to deployed API server with SSE endpoint
+        server_url = "https://madhushala-api.onrender.com/sse"
         print(f"=== Debug: Connecting to {server_url} ===")
         async with sse_client(server_url) as (read, write):
             print("=== Debug: SSE client connected ===")
