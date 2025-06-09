@@ -317,6 +317,15 @@ def handle_booking(msg: str) -> str:
 
 
 
+# SSE endpoint for MCP client
+@app.get("/sse")
+async def sse_endpoint(request: Request):
+    """SSE endpoint for MCP protocol"""
+    async def event_generator():
+        yield f"data: {json.dumps({'type': 'initialize', 'server': 'madhushala'})}\n\n"
+        
+    return EventSourceResponse(event_generator())
+
 # HTTP endpoints for cloud deployment
 @app.post("/agent")
 async def handle_agent_request(request: MessageRequest):
