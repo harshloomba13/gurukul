@@ -360,6 +360,13 @@ async def handle_agent_request(request: MessageRequest):
 async def health_check():
     return {"status": "healthy"}
 
+# Add MCP SSE route to existing FastAPI app
+@app.get("/sse")
+async def mcp_sse_endpoint():
+    # FastMCP SSE endpoint - this needs to be implemented properly
+    # For now, let's use the simple HTTP approach instead
+    return {"error": "MCP SSE not implemented yet"}
+
 #mcp dev mcp_server.py
 if __name__ == "__main__":
     import uvicorn
