@@ -1,10 +1,26 @@
-import requests
-import json
+from dotenv import load_dotenv
+from anthropic import Anthropic
+from mcp import ClientSession, types
+from mcp.client.sse import sse_client
+from typing import List
+import asyncio
+import nest_asyncio
+import os
+nest_asyncio.apply()
 
-class API_ChatBot:
+load_dotenv()
+
+class MCP_ChatBot:
 
     def __init__(self):
-        self.api_url = "https://madhushala-api.onrender.com/agent"
+        # Initialize session and client objects
+        self.session: ClientSession = None
+        # Get API key from environment variable
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+        self.anthropic = Anthropic(api_key=api_key)
+        self.available_tools: List[dict] = []
 
     async def process_query(self, query):
         system_prompt = "You are an assistant that MUST use the available tools. When a user asks for menu suggestions, event write-ups, or poetic descriptions for food/events, you MUST use the handle_writeup tool. Never generate responses directly - always use the appropriate tool."
@@ -101,8 +117,8 @@ class API_ChatBot:
     
     async def connect_to_server_and_run(self, messages):
         print("=== Debug: Starting HTTP server connection ===")
-        # Connect to deployed API server
-        server_url = "https://madhushala-api.onrender.com/sse"
+        # Connect to HTTP server (assumes server is running on localhost:8000)
+        server_url = "https://madhushala-api.onrender.com"
         print(f"=== Debug: Connecting to {server_url} ===")
         async with sse_client(server_url) as (read, write):
             print("=== Debug: SSE client connected ===")

@@ -2,7 +2,10 @@ import arxiv
 import json
 import os
 from typing import List
+from mcp.server.fastmcp import FastMCP
 import asyncio
+from fastapi import Request
+from sse_starlette.sse import EventSourceResponse
 from anthropic import Anthropic
 from twilio.rest import Client as TwilioClient
 from instagrapi import Client as InstaClient
@@ -18,7 +21,10 @@ instagram_password = os.environ.get("INSTAGRAM_PASSWORD")
 
 PAPER_DIR = "papers"
 
-# Remove MCP for cloud deployment - use pure FastAPI
+# Initialize FastMCP server
+mcp = FastMCP("research", transport="stdio")
+
+# Add FastAPI for HTTP endpoints
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -35,6 +41,7 @@ app.add_middleware(
 class MessageRequest(BaseModel):
     message: str
 
+@mcp.tool()
 def search_papers(topic: str, max_results: int = 5) -> List[str]:
     """
     Search for papers on arXiv based on a topic and store their information.
@@ -68,13 +75,8 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     # Try to load existing papers info
     try:
         with open(file_path, "r") as json_file:
-            content = json_file.read().strip()
-            if not content:
-                papers_info = {}
-            else:
-                papers_info = json.loads(content)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"=== Debug: JSON error in search_papers: {str(e)} ===")
+            papers_info = json.load(json_file)
+    except (FileNotFoundError, json.JSONDecodeError):
         papers_info = {}
 
     # Process each paper and add to papers_info  
@@ -98,6 +100,7 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     
     return paper_ids
 
+@mcp.tool()
 def extract_info(paper_id: str) -> str:
     """
     Search for information about a specific paper across all topic directories.
@@ -125,6 +128,7 @@ def extract_info(paper_id: str) -> str:
     
     return f"There's no saved information related to paper {paper_id}."
 
+@mcp.resource("papers://folders")
 def get_available_folders() -> str:
     """
     List all available topic folders in the papers directory.
@@ -153,6 +157,7 @@ def get_available_folders() -> str:
     
     return content
 
+@mcp.resource("papers://{topic}")
 def get_topic_papers(topic: str) -> str:
     """
     Get detailed information about papers on a specific topic.
@@ -187,6 +192,7 @@ def get_topic_papers(topic: str) -> str:
     except json.JSONDecodeError:
         return f"# Error reading papers data for {topic}\n\nThe papers data file is corrupted."
 
+@mcp.prompt()
 def generate_search_prompt(topic: str, num_papers: int = 5) -> str:
     """Generate a prompt for Claude to find and discuss academic papers on a specific topic."""
     return f"""Search for {num_papers} academic papers about '{topic}' using the search_papers tool. Follow these instructions:
@@ -213,31 +219,23 @@ def generate_search_prompt(topic: str, num_papers: int = 5) -> str:
 
 # --- Helper functions ---
 def call_gpt(prompt):
-    try:
-        # Get API key from environment variable
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
-                raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
-        anthropic = Anthropic(api_key=api_key)
-        messages = [{'role':'user', 'content':prompt}]
-        response = anthropic.messages.create(max_tokens = 2024,
-                                          model = 'claude-3-5-sonnet-20241022', 
-                                          messages = messages)
-        return response.content[0].text
-    except Exception as e:
-        print(f"=== Debug: GPT API error: {str(e)} ===")
-        return f"Error generating content: {str(e)}"
+    # Replace with actual GPT call logic
+    # Get API key from environment variable
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+    anthropic = Anthropic(api_key=api_key)
+    messages = [{'role':'user', 'content':prompt}]
+    response = anthropic.messages.create(max_tokens = 2024,
+                                      model = 'claude-3-5-sonnet-20241022', 
+                                      messages = messages)
+    return response.content[0].text
 
 def send_to_whatsapp(to_number, message):
     try:
         if not message or len(message.strip()) == 0:
             print("=== Debug: Empty message, skipping WhatsApp send ===")
             return
-        
-        print(f"=== Debug: Twilio SID: {twilio_sid[:10] if twilio_sid else 'None'}... ===")
-        print(f"=== Debug: Twilio Token: {twilio_token if twilio_token else 'None'} ===")
-        print(f"=== Debug: WhatsApp Number: {twilio_whatsapp_number} ===")
-        print(f"=== Debug: To Number: {to_number} ===")
         
         if not all([twilio_sid, twilio_token, twilio_whatsapp_number, to_number]):
             print("=== Debug: Missing Twilio credentials, skipping WhatsApp send ===")
@@ -282,11 +280,13 @@ def postprocess_and_route(tool_name, content):
     elif tool_name == "handle_writeup":
         send_to_whatsapp(anu_whatsapp, content)
 
+@mcp.tool(name="handle_advertisement", description="Create a promotional Instagram + WhatsApp post for the event.")
 def handle_advertisement(msg: str) -> str:
     result = call_gpt(f"Create a promotional Instagram + WhatsApp post for this event: {msg}")
     postprocess_and_route("handle_advertisement", result)
     return result
 
+@mcp.tool(name="handle_writeup", description="Suggest a menu and poetic write-up for the event.")
 def handle_writeup(msg: str) -> str:
     print("=== Debug: Entering handle_writeup ===")
     print(f"Message received: {msg}")
@@ -297,16 +297,19 @@ def handle_writeup(msg: str) -> str:
     return result
 
 
+@mcp.tool(name="handle_notification", description="Write a WhatsApp reminder message to guests.")
 def handle_notification(msg: str) -> str:
     result = call_gpt(f"Write a WhatsApp reminder message to guests about: {msg}")
     postprocess_and_route("handle_notification", result)
     return result
 
+@mcp.tool(name="handle_todo_list", description="Generate a to-do list for the event organizer.")
 def handle_todo_list(msg: str) -> str:
     result = call_gpt(f"Generate a checklist of things the event organizer needs to do before: {msg}")
     postprocess_and_route("handle_todo_list", result)
     return result
 
+@mcp.tool(name="handle_booking", description="Handle event booking and reservation requests.")
 def handle_booking(msg: str) -> str:
     result = call_gpt(f"Create a booking confirmation or response for: {msg}")
     postprocess_and_route("handle_booking", result)
