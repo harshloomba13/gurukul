@@ -329,8 +329,20 @@ async def handle_agent_request(request: MessageRequest):
 async def health_check():
     return {"status": "healthy"}
 
+# Remove the simple hardcoded endpoint and use proper MCP SSE
+# The FastMCP with transport="sse" should handle this automatically
+
+# Integrate FastMCP SSE with our FastAPI app
+try:
+    # Try to get the FastMCP app and mount it
+    mcp_app = mcp._app if hasattr(mcp, '_app') else None
+    if mcp_app:
+        app.mount("/mcp", mcp_app)
+except:
+    print("Could not mount MCP app")
+
 #mcp dev mcp_server.py
 if __name__ == "__main__":
     import uvicorn
-    # Run HTTP server for cloud deployment
+    # Run the combined FastAPI app
     uvicorn.run(app, host="0.0.0.0", port=8000)
