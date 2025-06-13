@@ -117,8 +117,8 @@ class MCP_ChatBot:
     
     async def connect_to_server_and_run(self, messages):
         print("=== Debug: Starting HTTP server connection ===")
-        # Connect to HTTP server (assumes server is running on localhost:8000)
-        server_url = "https://madhushala-api.onrender.com"
+        # Connect to MCP SSE endpoint
+        server_url = "https://madhushala-api.onrender.com/mcp"
         print(f"=== Debug: Connecting to {server_url} ===")
         async with sse_client(server_url) as (read, write):
             print("=== Debug: SSE client connected ===")
