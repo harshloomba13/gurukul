@@ -22,7 +22,7 @@ instagram_password = os.environ.get("INSTAGRAM_PASSWORD")
 PAPER_DIR = "papers"
 
 # Initialize FastMCP server
-mcp = FastMCP("research", transport="stdio")
+mcp = FastMCP("research", transport="sse")
 
 # Add FastAPI for HTTP endpoints
 from fastapi import FastAPI
