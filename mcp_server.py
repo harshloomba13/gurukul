@@ -332,14 +332,19 @@ async def health_check():
 # Remove the simple hardcoded endpoint and use proper MCP SSE
 # The FastMCP with transport="sse" should handle this automatically
 
-# Integrate FastMCP SSE with our FastAPI app
+# Debug FastMCP object to see available attributes
+print(f"FastMCP attributes: {dir(mcp)}")
+
+# Mount the FastMCP SSE app
 try:
-    # Try to get the FastMCP app and mount it
-    mcp_app = mcp._app if hasattr(mcp, '_app') else None
-    if mcp_app:
-        app.mount("/mcp", mcp_app)
-except:
-    print("Could not mount MCP app")
+    if hasattr(mcp, 'sse_app'):
+        print("Found mcp.sse_app - mounting it")
+        app.mount("/mcp", mcp.sse_app)
+    else:
+        print("No sse_app found")
+        
+except Exception as e:
+    print(f"Error mounting MCP: {e}")
 
 #mcp dev mcp_server.py
 if __name__ == "__main__":
