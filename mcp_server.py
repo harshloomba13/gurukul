@@ -329,6 +329,16 @@ async def handle_agent_request(request: MessageRequest):
 async def health_check():
     return {"status": "healthy"}
 
+@app.get("/debug")
+async def debug_mcp():
+    """Debug endpoint to check MCP status"""
+    return {
+        "mcp_has_sse_app": hasattr(mcp, 'sse_app'),
+        "mcp_transport": getattr(mcp, 'transport', 'unknown'),
+        "mcp_methods": [method for method in dir(mcp) if not method.startswith('_')],
+        "mcp_tools": [tool.name for tool in mcp.list_tools()],
+    }
+
 # Remove the simple hardcoded endpoint and use proper MCP SSE
 # The FastMCP with transport="sse" should handle this automatically
 
