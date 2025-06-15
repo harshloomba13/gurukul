@@ -1,6 +1,5 @@
 import os
 import sys
-sys.path.append('..')  # Add parent directory to path
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -20,20 +19,20 @@ except ImportError:
         # Fallback to basic GPT call
         from anthropic import Anthropic
     
-    def server_call_gpt(prompt: str) -> str:
-        try:
-            api_key = os.environ.get("ANTHROPIC_API_KEY")
-            if not api_key:
-                return "❌ Error: ANTHROPIC_API_KEY not set"
-            anthropic = Anthropic(api_key=api_key)
-            response = anthropic.messages.create(
-                max_tokens=2024,
-                model='claude-3-5-sonnet-20241022',
-                messages=[{'role': 'user', 'content': prompt}]
-            )
-            return response.content[0].text
-        except Exception as e:
-            return f"❌ Error: {str(e)}"
+        def server_call_gpt(prompt: str) -> str:
+            try:
+                api_key = os.environ.get("ANTHROPIC_API_KEY")
+                if not api_key:
+                    return "❌ Error: ANTHROPIC_API_KEY not set"
+                anthropic = Anthropic(api_key=api_key)
+                response = anthropic.messages.create(
+                    max_tokens=2024,
+                    model='claude-3-5-sonnet-20241022',
+                    messages=[{'role': 'user', 'content': prompt}]
+                )
+                return response.content[0].text
+            except Exception as e:
+                return f"❌ Error: {str(e)}"
 
 async def call_gpt(prompt: str) -> str:
     try:
