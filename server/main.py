@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from local_graph.graph import invoke_graph
-from mcp_client import MCP_ChatBot
 import os
 
 # Debug print to show environment variables
