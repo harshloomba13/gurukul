@@ -325,6 +325,10 @@ async def handle_agent_request(request: MessageRequest):
     except Exception as e:
         return {"error": str(e)}
 
+@app.get("/")
+async def root():
+    return {"message": "Madhushala backend is running", "endpoints": ["/health", "/debug", "/agent", "/mcp"]}
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
@@ -332,12 +336,23 @@ async def health_check():
 @app.get("/debug")
 async def debug_mcp():
     """Debug endpoint to check MCP status"""
-    return {
-        "mcp_has_sse_app": hasattr(mcp, 'sse_app'),
-        "mcp_transport": getattr(mcp, 'transport', 'unknown'),
-        "mcp_methods": [method for method in dir(mcp) if not method.startswith('_')],
-        "mcp_tools": [tool.name for tool in mcp.list_tools()],
-    }
+    try:
+        tools_info = "Error getting tools"
+        try:
+            tools = mcp.list_tools()
+            tools_info = [tool.name for tool in tools] if tools else "No tools"
+        except Exception as e:
+            tools_info = f"Error: {str(e)}"
+            
+        return {
+            "mcp_has_sse_app": hasattr(mcp, 'sse_app'),
+            "mcp_transport": getattr(mcp, 'transport', 'unknown'),
+            "mcp_methods": [method for method in dir(mcp) if not method.startswith('_')],
+            "mcp_tools": tools_info,
+            "status": "debug endpoint working"
+        }
+    except Exception as e:
+        return {"error": f"Debug endpoint error: {str(e)}"}
 
 # Remove the simple hardcoded endpoint and use proper MCP SSE
 # The FastMCP with transport="sse" should handle this automatically
@@ -348,13 +363,24 @@ print(f"FastMCP attributes: {dir(mcp)}")
 # Mount the FastMCP SSE app
 try:
     if hasattr(mcp, 'sse_app'):
-        print("Found mcp.sse_app - mounting it")
-        app.mount("/mcp", mcp.sse_app)
+        print("Found mcp.sse_app - calling it to get the app")
+        sse_app_instance = mcp.sse_app()  # Call the method to get the app
+        app.mount("/mcp", sse_app_instance)
+        print("Successfully mounted MCP SSE app at /mcp")
     else:
         print("No sse_app found")
         
 except Exception as e:
     print(f"Error mounting MCP: {e}")
+    # Create a simple SSE endpoint as fallback
+    @app.get("/mcp")
+    async def fallback_mcp_sse():
+        async def event_generator():
+            yield f"data: {json.dumps({'type': 'init', 'server': 'madhushala'})}\n\n"
+            while True:
+                await asyncio.sleep(30)
+                yield f"data: {json.dumps({'type': 'ping'})}\n\n"
+        return EventSourceResponse(event_generator())
 
 #mcp dev mcp_server.py
 if __name__ == "__main__":
