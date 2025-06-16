@@ -3,7 +3,7 @@ import json
 
 def test_api(message):
     """Simple HTTP client to test the deployed API"""
-    api_url = "https://madhushala-api.onrender.com/mcp"
+    api_url = "https://madhushala-api.onrender.com/agent"
     
     try:
         print(f"=== Sending request to {api_url} ===")
