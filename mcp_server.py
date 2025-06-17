@@ -253,6 +253,7 @@ def postprocess_and_route(tool_name, content):
     if tool_name in ["handle_booking", "handle_notification", "handle_todo_list"]:
         send_to_whatsapp(anu_whatsapp, content)
     elif tool_name == "handle_advertisement":
+        print("=== Debug: Entering handle_advertisement ===")
         post_to_instagram(content)
         #send_to_whatsapp(anu_whatsapp, content)
     elif tool_name == "handle_writeup":
