@@ -3,20 +3,22 @@ import sys
 sys.path.append('..')  # Add parent directory to path
 from dotenv import load_dotenv
 load_dotenv()
+import logging
+logging.basicConfig(level=logging.INFO)
 
 # Import tool functions directly from mcp_server
 try:
     # Try importing from current directory first (for deployment)
     from mcp_server import handle_writeup, handle_advertisement, handle_notification, handle_todo_list, handle_booking, call_gpt as server_call_gpt
-    print("✅ Successfully imported tool functions from mcp_server (current dir)")
+    logging.info("✅ Successfully imported tool functions from mcp_server (current dir)")
 except ImportError:
     try:
         # Try importing from parent directory (for local development)
         sys.path.append('..')
         from mcp_server import handle_writeup, handle_advertisement, handle_notification, handle_todo_list, handle_booking, call_gpt as server_call_gpt
-        print("✅ Successfully imported tool functions from mcp_server (parent dir)")
+        logging.info("✅ Successfully imported tool functions from mcp_server (parent dir)")
     except ImportError as e:
-        print(f"❌ Failed to import from mcp_server: {e}")
+        logging.error(f"❌ Failed to import from mcp_server: {e}")
         # Fallback to basic GPT call
         from anthropic import Anthropic
     
