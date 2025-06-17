@@ -2,7 +2,8 @@ import streamlit as st
 import requests
 import os
 from dotenv import load_dotenv
-
+import logging
+logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 st.set_page_config(page_title="Madhushala", layout="centered")
@@ -22,6 +23,7 @@ if prompt:
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
+        logging.info(f"User prompt: {prompt}")
         with st.spinner("Thinking..."):
             try:
                 headers = {
@@ -33,6 +35,7 @@ if prompt:
                     json={"message": prompt},
                     headers=headers
                 )
+                logging.info(f"Response: {res.json()}")
                 reply = res.json().get("response", "Sorry, something went wrong.")
             except Exception as e:
                 reply = f"❌ Error: {str(e)}"
