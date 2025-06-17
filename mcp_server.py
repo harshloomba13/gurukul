@@ -10,6 +10,9 @@ from anthropic import Anthropic
 from twilio.rest import Client as TwilioClient
 from instagrapi import Client as InstaClient
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 # --- Configuration ---
 
 anu_whatsapp=os.environ.get("ANU_WHATSAPP")
@@ -96,7 +99,7 @@ def search_papers(topic: str, max_results: int = 5) -> List[str]:
     with open(file_path, "w") as json_file:
         json.dump(papers_info, json_file, indent=2)
     
-    print(f"Results are saved in: {file_path}")
+    logging.info(f"Results are saved in: {file_path}")
     
     return paper_ids
 
@@ -123,7 +126,7 @@ def extract_info(paper_id: str) -> str:
                         if paper_id in papers_info:
                             return json.dumps(papers_info[paper_id], indent=2)
                 except (FileNotFoundError, json.JSONDecodeError) as e:
-                    print(f"Error reading {file_path}: {str(e)}")
+                    logging.info(f"Error reading {file_path}: {str(e)}")
                     continue
     
     return f"There's no saved information related to paper {paper_id}."
@@ -233,13 +236,13 @@ def call_gpt(prompt):
 
 def send_to_whatsapp(to_number, message):
     if not message or len(message.strip()) == 0:
-        print("=== Debug: Empty message, skipping WhatsApp send ===")
+        logging.info("=== Debug: Empty message, skipping WhatsApp send ===")
         return
     
     # Truncate message if it's too long for WhatsApp (1600 char limit)
     if len(message) > 1500:  # Leave some buffer
         message = message[:1500] + "..."
-        print(f"=== Debug: Message truncated to {len(message)} characters ===")
+        logging.info(f"=== Debug: Message truncated to {len(message)} characters ===")
     
     client = TwilioClient(twilio_sid, twilio_token)
     client.messages.create(body=message, from_=twilio_whatsapp_number, to=to_number)
@@ -253,7 +256,7 @@ def postprocess_and_route(tool_name, content):
     if tool_name in ["handle_booking", "handle_notification", "handle_todo_list"]:
         send_to_whatsapp(anu_whatsapp, content)
     elif tool_name == "handle_advertisement":
-        print("=== Debug: Entering handle_advertisement ===")
+        logging.info("=== Debug: Entering handle_advertisement ===")
         post_to_instagram(content)
         #send_to_whatsapp(anu_whatsapp, content)
     elif tool_name == "handle_writeup":
@@ -267,12 +270,12 @@ def handle_advertisement(msg: str) -> str:
 
 @mcp.tool(name="handle_writeup", description="Suggest a menu and poetic write-up for the event.")
 def handle_writeup(msg: str) -> str:
-    print("=== Debug: Entering handle_writeup ===")
-    print(f"Message received: {msg}")
+    logging.info("=== Debug: Entering handle_writeup ===")
+    logging.info(f"Message received: {msg}")
     result = call_gpt(f"Suggest a menu and a poetic write-up for this event: {msg}")
-    print("=== Debug: GPT response received ===")
+    logging.info("=== Debug: GPT response received ===")
     postprocess_and_route("handle_writeup", result)
-    print("=== Debug: Exiting handle_writeup ===")
+    logging.info("=== Debug: Exiting handle_writeup ===")
     return result
 
 
@@ -359,20 +362,20 @@ async def debug_mcp():
 # The FastMCP with transport="sse" should handle this automatically
 
 # Debug FastMCP object to see available attributes
-print(f"FastMCP attributes: {dir(mcp)}")
+logging.info(f"FastMCP attributes: {dir(mcp)}")
 
 # Mount the FastMCP SSE app
 try:
     if hasattr(mcp, 'sse_app'):
-        print("Found mcp.sse_app - calling it to get the app")
+        logging.info("Found mcp.sse_app - calling it to get the app")
         sse_app_instance = mcp.sse_app()  # Call the method to get the app
         app.mount("/mcp", sse_app_instance)
-        print("Successfully mounted MCP SSE app at /mcp")
+        logging.info("Successfully mounted MCP SSE app at /mcp")
     else:
-        print("No sse_app found")
+        logging.info("No sse_app found")
         
 except Exception as e:
-    print(f"Error mounting MCP: {e}")
+    logging.error(f"Error mounting MCP: {e}")
     # Create a simple SSE endpoint as fallback
     @app.get("/mcp")
     async def fallback_mcp_sse():
