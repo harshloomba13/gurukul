@@ -5,11 +5,15 @@ from utils.tracking import log_application
 from datetime import datetime
 from utils.config import GEMINI_API_KEY
 import logging
+from crewai.llm import LLM
 
 logger = logging.getLogger(__name__)
 
 def get_messaging_agent():
     try:
+        # Create a custom LLM configuration
+        llm = LLM(model="gemini/gemini-1.5-flash", api_key=GEMINI_API_KEY)
+        
         # Define the agent responsible for generating outreach messages
         agent = Agent(
             role="Outreach Messaging Specialist",
@@ -20,7 +24,8 @@ def get_messaging_agent():
                 "expressing genuine interest in the role and aligning their profile with the job."
             ),
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=llm
         )
         logger.info("✅ Messaging Agent created successfully")
         return agent
