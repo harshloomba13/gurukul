@@ -1,174 +1,433 @@
 #!/usr/bin/env python3
 """
-Automation script for generating web apps from Figma mockups using Claude Code CLI.
-This script automates the process that was previously done manually through Claude Code.
+NO-DELETE + PRUNE (strict, PATH-safe) edition: Figma -> Next.js via Claude CLI
+
+- Never deletes anything by default; only overwrites files Claude returns.
+- Optional prune_unlisted that removes ONLY previously generated pages (by header).
+  * prune_mode="delete" (default) or "archive" to .generated_archive/<timestamp>/
+- Strict JSON-only parsing of Claude output: expects [{"path","content"}...].
+- Forces the required header line onto every generated page.
+- Ensures Nav.tsx and patches layout.tsx.
+- PATH-safe: resolves 'claude', 'npm', 'node' and appends common paths.
+- doctor() helper for environment checks.
 """
 
-import subprocess
-import sys
-import time
+from __future__ import annotations
+
+import json
 import os
-from typing import Optional, List, Dict
+import re
+import shlex
+import shutil
+import subprocess
+from pathlib import Path
+from typing import Dict, List, Optional
+
+CONSTRAINT_SYSTEM_PROMPT = (
+    "You are a code generation tool. "
+    "Your ONLY valid output is a JSON array of files. "
+    "Return ONLY: [{\"path\":\"...\",\"content\":\"...\"}, ...]. "
+    "No prose. No markdown. No code fences. No intro/outro text. "
+    "If uncertain, return []."
+)
+
+COMMON_PATHS = [
+    "/opt/homebrew/bin",         # Apple Silicon Homebrew
+    "/usr/local/bin",            # Intel Homebrew
+    os.path.expanduser("~/.local/bin"),
+    os.path.expanduser("~/.npm-global/bin"),
+    "/usr/bin", "/bin",
+]
 
 class ClaudeCodeAutomation:
-    def __init__(self, project_path: str):
-        self.project_path = project_path
-        self.ensure_project_directory()
-    
-    def ensure_project_directory(self):
-        """Ensure we're in the correct project directory."""
-        if not os.path.exists(self.project_path):
-            raise Exception(f"Project directory does not exist: {self.project_path}")
-        os.chdir(self.project_path)
-        print(f"Working in directory: {os.getcwd()}")
-    
-    def run_claude_command(self, prompt: str, timeout: int = 300) -> bool:
-        """
-        Execute a Claude Code command with the given prompt.
-        Returns True if successful, False otherwise.
-        """
+    def __init__(self, project_path: str = "."):
+        self.project_path = str(Path(project_path).resolve())
+        cur_path = os.environ.get("PATH", "")
+        extras = [p for p in COMMON_PATHS if p and p not in cur_path.split(":")]
+        if extras:
+            os.environ["PATH"] = cur_path + (":" if cur_path else "") + ":".join(extras)
+
+    # ---------- Binary resolution & shell ----------
+    def _resolve_bin(self, exe: str) -> str:
+        override = os.environ.get(f"{exe.upper()}_BIN")
+        if override and Path(override).exists():
+            return override
+        found = shutil.which(exe)
+        if found:
+            return found
+        for base in COMMON_PATHS:
+            cand = Path(base) / exe
+            if cand.exists() and cand.is_file():
+                return str(cand)
+        raise FileNotFoundError(
+            f"Executable not found: '{exe}'. Ensure it is installed and on PATH.\n"
+            f"Tried PATH={os.environ.get('PATH')}"
+        )
+
+    def _run(self, args: List[str], timeout: int = 1800, capture: bool = True) -> subprocess.CompletedProcess:
+        if args and "/" not in args[0]:
+            args[0] = self._resolve_bin(args[0])
+        print("$", " ".join(shlex.quote(a) for a in args))
+        return subprocess.run(args, cwd=self.project_path, capture_output=capture, text=True, timeout=timeout)
+
+    def _sh(self, cmd: str):
+        p = self._run(shlex.split(cmd), capture=False)
+        if p.returncode != 0:
+            raise RuntimeError(f"Command failed: {cmd} (exit={p.returncode})")
+
+    # ---------- Figma URL helpers ----------
+    _KEY_RE = re.compile(
+        r"https?://(?:www\\.)?figma\\.com/(?:file|design|proto|presentation|embed|board)/([A-Za-z0-9]{22,64})"
+    )
+
+    def _file_key(self, url: str) -> str:
+        m = self._KEY_RE.match(url or "")
+        return m.group(1) if m else "unknown"
+
+    def _node_id(self, url: str) -> str:
+        from urllib.parse import urlparse, parse_qs
         try:
-            print(f"\n{'='*60}")
-            print(f"Executing Claude Code command:")
-            print(f"Prompt: {prompt[:100]}...")
-            print(f"{'='*60}")
-            
-            # Run claude code with the prompt
-            result = subprocess.run(
-                ["claude", "code", prompt],
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                cwd=self.project_path
-            )
-            
-            print(f"Return code: {result.returncode}")
-            print(f"STDOUT:\n{result.stdout}")
-            
-            if result.stderr:
-                print(f"STDERR:\n{result.stderr}")
-            
-            return result.returncode == 0
-            
-        except subprocess.TimeoutExpired:
-            print(f"Command timed out after {timeout} seconds")
-            return False
-        except Exception as e:
-            print(f"Error running Claude command: {e}")
-            return False
-    
-    def generate_app_from_figma(self, figma_url: str) -> bool:
-        """Generate a single-page app from one Figma URL."""
-        return self.generate_multi_page_app([{"url": figma_url, "name": "home", "route": "/"}])
-    
-    def generate_multi_page_app(self, figma_pages: List[Dict[str, str]]) -> bool:
-        """
-        Complete automation flow for generating a multi-page web app from multiple Figma mockups.
-        
-        Args:
-            figma_pages: List of dicts with 'url', 'name', and 'route' keys
-                       e.g., [{'url': 'figma_url_1', 'name': 'home', 'route': '/'},
-                             {'url': 'figma_url_2', 'name': 'about', 'route': '/about'}]
-        """
-        print(f"Starting automated multi-page Figma to web app generation...")
-        print(f"Generating {len(figma_pages)} pages: {[p['name'] for p in figma_pages]}")
-        
-        # Step 0: Clear previous generated files to ensure fresh start
-        clear_prompt = """
-        IMPORTANT: Before generating the new webapp, you MUST perform a complete cleanup:
-        
-        1. Delete ALL files in src/app/ EXCEPT layout.tsx and globals.css
-        2. Delete the entire .next/ directory if it exists (Next.js build cache)
-        3. Delete any public/assets/ or similar asset directories that were auto-generated
-        4. Clear any component files that were previously generated
-        
-        Use bash commands to ensure complete cleanup:
-        - rm -rf .next/
-        - rm -rf src/app/page.tsx src/app/*/
-        - rm -rf public/assets/ (if it exists and contains auto-generated assets)
-        
-        This is critical to ensure each new Figma mockup generates a completely fresh webapp without any interference from previous generations. Do NOT skip this step.
-        """
-        
-        success = self.run_claude_command(clear_prompt)
-        if not success:
-            print("Step 0 failed: Cleanup of previous files")
-            return False
-        
-        print("✅ Step 0 completed: Previous files cleaned up")
-        
-        # Step 1: Generate pages from all Figma mockups
-        page_details = "\n".join([f"- {page['name']}: {page['url']} (route: {page['route']})" for page in figma_pages])
-        
-        step1_prompt = f"""
-        Create a multi-page Next.js application using these Figma mockups:
-        
-        {page_details}
-        
-        CRITICAL Instructions:
-        1. FIRST: Use the figma dev MCP server to analyze EACH mockup URL individually and understand what each design contains
-        2. Create separate page components for each route using Next.js 13+ app router structure:
-           - Home page (/): src/app/page.tsx  
-           - Other pages: src/app/[route-name]/page.tsx (e.g., src/app/about/page.tsx for /about)
-        3. Each page should be generated from its SPECIFIC Figma URL - do NOT reuse content between pages
-        4. Use the recharts library for any charts/data visualization found in the mockups
-        5. Ensure consistent styling across all pages using TailwindCSS
-        6. Add navigation between pages using Next.js Link components (create a simple nav bar)
-        7. After generating all pages, use playwright MCP server to screenshot each page
-        8. Verify each generated page matches its corresponding Figma mockup
-        
-        IMPORTANT: Each Figma URL should produce DIFFERENT content. Do not generate the same page multiple times.
-        """
-        
-        success = self.run_claude_command(step1_prompt)
-        if not success:
-            print("Step 1 failed: Multi-page Figma analysis and code generation")
-            return False
-        
-        print("✅ Step 1 completed: All Figma mockups analyzed and pages generated")
-        
-        # Step 2: Run tests and build verification
-        step2_prompt = """
-        Run the build command to ensure there are no compilation errors. Fix any TypeScript or linting issues that arise. Then start the development server and take screenshots of all pages using Playwright to verify each page matches its corresponding mockup. Test navigation between pages.
-        """
-        
-        success = self.run_claude_command(step2_prompt)
-        if not success:
-            print("Step 2 failed: Build verification and testing")
-            return False
-        
-        print("✅ Step 2 completed: Multi-page application built and verified")
-        
-        print("🎉 Multi-page automation completed successfully!")
-        return True
+            q = parse_qs(urlparse(url).query)
+            return q.get("node-id", ["ROOT"])[0]
+        except Exception:
+            return "ROOT"
 
-def main(figma_url: Optional[str] = None):
-    """Main function to run the automation."""
-    # Configuration - use provided URL or default
-    if figma_url is None:
-        figma_url = "https://www.figma.com/design/MewdbgLi2pZnom6efzBGv3/Untitled?node-id=1-649&t=252vkstW8GfKizQG-11"
-    
-    project_path = "/Users/harshloomba/Documents/gurukul/playground/figma_to_webapp"
-    
-    try:
-        # Initialize automation
-        automation = ClaudeCodeAutomation(project_path)
-        
-        # Run the automation
-        success = automation.generate_app_from_figma(figma_url)
-        
-        if success:
-            print("\n🎉 Automation completed successfully!")
-            print("Your Next.js application has been generated from the Figma mockup.")
-            print(f"Project location: {project_path}")
-            print("Run 'npm run dev' to start the development server.")
+    # ---------- Paths ----------
+    def _route_to_path(self, route: str) -> Path:
+        if route == "/":
+            return Path(self.project_path) / "src" / "app" / "page.tsx"
+        segs = [s for s in route.split("/") if s]
+        return Path(self.project_path) / "src" / "app" / Path(*segs) / "page.tsx"
+
+    # ---------- Build ----------
+    def _rebuild(self):
+        self._sh("npm install")
+        self._sh("npm run build")
+
+    # ---------- Writing & checks ----------
+    def _write_file_blobs(self, blobs: List[Dict[str, str]]):
+        count = 0
+        for f in blobs:
+            path = f.get("path")
+            content = f.get("content")
+            if not path or content is None:
+                continue
+            full = Path(self.project_path) / path if not str(path).startswith(self.project_path) else Path(path)
+            full.parent.mkdir(parents=True, exist_ok=True)
+            full.write_text(content, encoding="utf-8")
+            count += 1
+        print(f"✅ Wrote {count} files")
+
+    def _assert_headers(self, figma_pages: List[Dict[str, str]]):
+        missing, bad = [], []
+        for p in figma_pages:
+            fp = self._route_to_path(p["route"])
+            if not fp.exists():
+                missing.append(str(fp)); continue
+            text = fp.read_text(encoding="utf-8")
+            expect_key = self._file_key(p["url"])
+            expect_node = self._node_id(p["url"])
+            needed = f"// GENERATED_FROM_FIGMA_KEY: {expect_key} NODE_ID: {expect_node} ROUTE: {p['route']}"
+            if not text.startswith(needed):
+                bad.append(str(fp))
+        return missing, bad
+
+    def _ensure_nav_component(self, figma_pages: List[Dict[str, str]]):
+        comp_dir = Path(self.project_path) / "src" / "app" / "_components"
+        comp_dir.mkdir(parents=True, exist_ok=True)
+        links = []
+        for p in figma_pages:
+            label = (p.get("name") or p["route"].strip("/") or "home")
+            links.append(f'        <Link href="{p["route"]}" className="px-3 py-2 rounded hover:bg-gray-100">{label}</Link>')
+        nav_tsx = """import Link from "next/link";
+
+export default function Nav() {
+  return (
+    <nav className="w-full border-b bg-white/70 backdrop-blur sticky top-0 z-50">
+      <div className="max-w-5xl mx-auto px-4 h-12 flex items-center gap-2">
+{links}
+      </div>
+    </nav>
+  );
+}
+""".replace("{links}", "\n".join(links))
+        (comp_dir / "Nav.tsx").write_text(nav_tsx, encoding="utf-8")
+
+        layout = Path(self.project_path) / "src" / "app" / "layout.tsx"
+        if layout.exists():
+            text = layout.read_text(encoding="utf-8")
+            if 'from "@/app/_components/Nav"' not in text:
+                text = text.replace('import "./globals.css";', 'import "./globals.css";\nimport Nav from "@/app/_components/Nav";')
+            if "<Nav " not in text and "<Nav/>" not in text and "<Nav />" not in text:
+                text = text.replace("{children}", "<Nav />\n        {children}")
+            layout.write_text(text, encoding="utf-8")
+
+    # ---------- FORCE header after write ----------
+    def _force_header(self, route: str, url: str):
+        fp = self._route_to_path(route)
+        if not fp.exists():
+            return
+        text = fp.read_text(encoding="utf-8")
+        header = f"// GENERATED_FROM_FIGMA_KEY: {self._file_key(url)} NODE_ID: {self._node_id(url)} ROUTE: {route}\n"
+        if not text.startswith(header):
+            fp.write_text(header + text, encoding="utf-8")
+            print(f"🔧 Preprended header to {fp}")
+
+    # ---------- PRUNE previously generated pages ----------
+    def _prune_generated_pages(self, keep_routes: List[str], mode: str = "delete") -> None:
+        """
+        Remove ONLY pages we generated (recognized by header), except those in keep_routes.
+        mode: "delete" (default) or "archive" to .generated_archive/<timestamp>/
+        """
+        from time import strftime
+        app_dir = Path(self.project_path) / "src" / "app"
+        removed = []
+
+        def is_generated(fp: Path) -> bool:
+            try:
+                first = fp.read_text(encoding="utf-8").splitlines()[0]
+            except Exception:
+                return False
+            return first.startswith("// GENERATED_FROM_FIGMA_KEY:")
+
+        archive_root = None
+        if mode == "archive":
+            archive_root = Path(self.project_path) / ".generated_archive" / strftime("%Y%m%d-%H%M%S")
+
+        # root "/"
+        root_page = app_dir / "page.tsx"
+        if root_page.exists() and is_generated(root_page) and ("/" not in keep_routes):
+            if mode == "archive":
+                dst = archive_root / "root" / "page.tsx"
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(root_page), str(dst))
+            else:
+                root_page.unlink()
+            removed.append("/")
+
+        # subroutes
+        for d in app_dir.iterdir():
+            if not d.is_dir():
+                continue
+            if d.name.startswith("_") or d.name in {"api", "fonts"}:
+                continue
+            page_file = d / "page.tsx"
+            if not page_file.exists() or not is_generated(page_file):
+                continue
+            route = "/" + d.name
+            if route in keep_routes:
+                continue
+            if mode == "archive":
+                dst = archive_root / d.name / "page.tsx"
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(page_file), str(dst))
+            else:
+                page_file.unlink()
+            try:
+                if not any(d.iterdir()):
+                    d.rmdir()
+            except Exception:
+                pass
+            removed.append(route)
+
+        if removed:
+            if mode == "archive":
+                print(f"🧹 Archived generated pages not in keep list: {removed}")
+            else:
+                print(f"🧹 Pruned generated pages not in keep list: {removed}")
         else:
-            print("\n❌ Automation failed. Please check the logs above.")
-            sys.exit(1)
-            
-    except Exception as e:
-        print(f"❌ Automation error: {e}")
-        sys.exit(1)
+            print("🧹 Nothing to prune (no generated pages outside keep list).")
 
-if __name__ == "__main__":
-    main()
+    # ---------- Claude headless call ----------
+    def _claude_print(self, prompt: str, timeout: int = 900) -> Optional[str]:
+        print("=" * 60)
+        print("Claude (print) prompt (first 320 chars):")
+        print(prompt[:320] + ("..." if len(prompt) > 320 else ""))
+        print("=" * 60)
+
+        args = [
+            "claude",
+            "-p", prompt,
+            "--append-system-prompt", CONSTRAINT_SYSTEM_PROMPT,
+            "--output-format", "text",
+            "--verbose",
+            "--disallowedTools", "Bash,Edit,Read,WebSearch",
+        ]
+        try:
+            result = self._run(args, timeout=timeout, capture=True)
+        except FileNotFoundError as e:
+            print("❌", e)
+            return None
+
+        print("Return code:", result.returncode)
+        if result.stderr:
+            print("STDERR:\n", result.stderr[:2000])
+        print("STDOUT (first 600 chars):\n", (result.stdout or "")[:600])
+        if result.returncode != 0:
+            return None
+        return result.stdout or ""
+
+    # ---------- Prompt builder ----------
+    def build_json_prompt(self, figma_pages: List[Dict[str, str]]) -> str:
+        pages_block = "\n".join([f"- {p['route']}: {p['url']}" for p in figma_pages])
+        resolved_keys = "\n".join([f"{p['route']} :: {self._file_key(p['url'])}" for p in figma_pages])
+        resolved_nodes = "\n".join([f"{p['route']} :: {self._node_id(p['url'])}" for p in figma_pages])
+
+        return f"""
+Generate files for a Next.js 13+ App Router project **from the following Figma pages**.
+
+PAGES (route → URL):
+{pages_block}
+
+REQUIREMENTS:
+1) For each route, create the page file (app router):
+   "/"      → src/app/page.tsx
+   "/foo"   → src/app/foo/page.tsx
+2) The FIRST line of every page MUST be exactly:
+   // GENERATED_FROM_FIGMA_KEY: <FILE_KEY> NODE_ID: <NODE_ID> ROUTE: <ROUTE>
+3) Each page MUST reflect its own Figma design. Do NOT reuse content between routes.
+4) Use Tailwind for styling. If charts appear, use Recharts with placeholder data.
+5) RESPONSE FORMAT (STRICT):
+   Return ONLY a JSON array of objects: [{{"path":"...","content":"..."}}, ...]
+   - Start with '[' and end with ']'
+   - No prose. No markdown. No backticks. No prefaces.
+   - If uncertain, return an empty array []
+
+RESOLVED_KEYS (use these verbatim in the first line of each page):
+{resolved_keys}
+
+RESOLVED_NODE_IDS:
+{resolved_nodes}
+""".strip()
+
+    # ---------- Strict JSON extractor ----------
+    def _extract_json_array(self, text: str) -> Optional[List[Dict[str, str]]]:
+        import json, re
+
+        def parse_candidate(s: str) -> Optional[List[Dict[str, str]]]:
+            try:
+                arr = json.loads(s)
+                if isinstance(arr, list):
+                    clean = []
+                    for x in arr:
+                        if isinstance(x, dict) and isinstance(x.get("path"), str) and isinstance(x.get("content"), str):
+                            clean.append({"path": x["path"], "content": x["content"]})
+                    if clean and len(clean) == len(arr):
+                        return clean
+            except Exception:
+                pass
+            return None
+
+        m = re.search(r"```(?:json)?\s*(\[\s*.*?\s*\])\s*```", text, re.S | re.I)
+        if m:
+            val = parse_candidate(m.group(1))
+            if val is not None:
+                return val
+
+        start, end = text.find("["), text.rfind("]")
+        if start != -1 and end != -1 and end > start:
+            frag = text[start:end+1]
+            val = parse_candidate(frag)
+            if val is not None:
+                return val
+
+        return None
+
+    # ---------- Diagnostics ----------
+    def doctor(self) -> None:
+        root = Path(self.project_path)
+        print("Project path:", root)
+        print("Exists:", root.exists())
+        pkg = root / "package.json"
+        print("package.json:", "OK" if pkg.exists() else "MISSING")
+        appdir = root / "src" / "app"
+        print("src/app:", "OK" if appdir.exists() else "MISSING")
+        for exe in ("claude", "npm", "node"):
+            try:
+                resolved = self._resolve_bin(exe)
+                print(f"{exe}: OK → {resolved}")
+            except FileNotFoundError:
+                print(f"{exe}: NOT FOUND")
+        layout = appdir / "layout.tsx"
+        print("layout.tsx:", "OK" if layout.exists() else "MISSING (not fatal)")
+        print("PATH:", os.environ.get("PATH"))
+
+    # ---------- Public API ----------
+    def generate_app_from_figma(self, figma_url: str) -> bool:
+        if not figma_url:
+            print("No figma_url provided")
+            return False
+        return self.generate_multi_page_app([{"url": figma_url, "name": "home", "route": "/"}])
+
+    def generate_multi_page_app(self, figma_pages: List[Dict[str, str]], prune_unlisted: bool = False, prune_mode: str = "delete") -> bool:
+        print("Starting Figma -> Next.js generation (NO-DELETE + PRUNE)…")
+        print("Routes:", [p["route"] for p in figma_pages])
+        print("Safety: By default no deletion; pruning only touches pages we generated (header-marked).")
+
+        contract = self.build_json_prompt(figma_pages)
+        attempts = 0
+        blobs: Optional[List[Dict[str, str]]] = None
+
+        while attempts < 3 and blobs is None:
+            attempts += 1
+            attempt_prompt = contract if attempts == 1 else (
+                contract + "\\n\\nFORMAT ENFORCEMENT:\\n"
+                "Re-output ONLY the JSON array of files for the same task.\\n"
+                "Start with '[' and end with ']'. No other text."
+            )
+            out = self._claude_print(attempt_prompt, timeout=900)
+
+        #     if not out:
+        #         print(f"Attempt {attempts}: no output from Claude.")
+        #         continue
+
+            blobs = self._extract_json_array(out or "")
+            if blobs is None:
+                print(f"Attempt {attempts}: output was not valid JSON; will re-ask.")
+
+        if blobs is None:
+            print("❌ Failed to obtain JSON files from Claude after 3 attempts.")
+            return False
+
+        # 2) Write files
+        try:
+            self._write_file_blobs(blobs)
+        except Exception as e:
+            print("❌ Failed to write files:", e); return False
+
+        # 3) Force header for each target route
+        try:
+            for p in figma_pages:
+                self._force_header(p["route"], p["url"])
+        except Exception as e:
+            print("⚠️ Could not force headers:", e)
+
+        # 4) Ensure Nav and patch layout
+        try:
+            self._ensure_nav_component(figma_pages)
+            print("✅ Nav ensured and layout patched")
+        except Exception as e:
+            print("⚠️ Could not ensure Nav/layout:", e)
+
+        # 5) Optional prune
+        if prune_unlisted:
+            keep = [p["route"] for p in figma_pages]
+            self._prune_generated_pages(keep_routes=keep, mode=prune_mode)
+
+        # 6) Verify header markers present per route
+        missing, bad = self._assert_headers(figma_pages)
+        if missing:
+            print("❌ Missing page files:", missing); return False
+        if bad:
+            print("❌ Pages missing/incorrect header markers:", bad); return False
+        print("✅ Header markers OK")
+
+        # 7) Build project
+        try:
+            self._rebuild()
+            print("✅ Build OK")
+        except Exception as e:
+            print("❌ Build failed:", e); return False
+
+        print("🎉 Generation complete")
+        return True
