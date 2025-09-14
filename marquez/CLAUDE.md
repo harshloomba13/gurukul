@@ -736,5 +736,17 @@ docker exec astro-marquez-tutorial_db9165-postgres-1 \
 
 *This enterprise data lineage system demonstrates production-ready capabilities for data governance, compliance, and business intelligence in a scalable, reliable architecture.*
 
+## Demonstration
+Sample Screenshots of NoSQL lineage tracking-
+Loading MongDB data and orchestrating it using Airflow -
+<img width="1776" height="1035" alt="Screenshot 2025-09-14 at 4 43 40 PM" src="https://github.com/user-attachments/assets/58f5bb34-922e-479b-93d5-e2c8b3f1be3f" />
 
-<img width="1664" height="990" alt="Screenshot 2025-09-14 at 4 41 59 PM" src="https://github.com/user-attachments/assets/49d2470c-75fa-4545-9a18-e1fb2a7553db" />
+Related Visualization in Marquez WEB-
+<img width="1771" height="1030" alt="Screenshot 2025-09-14 at 4 44 26 PM" src="https://github.com/user-attachments/assets/ba53aacb-e200-4668-87a1-3a2ab046eb64" />
+
+Sample Screenshots of SQL lineage tracking -
+<img width="1704" height="1005" alt="Screenshot 2025-09-14 at 4 45 07 PM" src="https://github.com/user-attachments/assets/4a83c6e1-5e75-463b-aa29-9c53124563e5" />
+
+Visualization -
+<img width="1766" height="993" alt="Screenshot 2025-09-14 at 4 46 14 PM" src="https://github.com/user-attachments/assets/b4dfaa93-711c-42bc-9cb2-eaf8596248a5" />
+
