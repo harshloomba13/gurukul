@@ -1,0 +1,23 @@
+# This file allows you to configure Airflow Connections, Pools, and Variables in a single place for local development only.
+# NOTE: json dicts can be added to the conn_extra field as yaml key value pairs. See the example below.
+
+# For more information, refer to our docs: https://www.astronomer.io/docs/astro/cli/develop-project#configure-airflow_settingsyaml-local-development-only
+# For questions, reach out to: https://support.astronomer.io
+# For issues create an issue ticket here: https://github.com/astronomer/astro-cli/issues
+
+airflow:
+  connections:
+    - conn_id: postgres_default
+      conn_type: postgres
+      conn_host: host.docker.internal
+      conn_schema: lineagetutorial
+      conn_login: postgres
+      conn_password: postgres
+      conn_port: 5435
+    - conn_id: mongodb_default
+      conn_type: mongo
+      conn_host: mongodb
+      conn_login: admin
+      conn_password: admin123
+      conn_port: 27017
+      conn_extra: '{"authSource": "admin", "authMechanism": "SCRAM-SHA-1"}'
