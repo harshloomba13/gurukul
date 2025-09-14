@@ -735,3 +735,6 @@ docker exec astro-marquez-tutorial_db9165-postgres-1 \
 ---
 
 *This enterprise data lineage system demonstrates production-ready capabilities for data governance, compliance, and business intelligence in a scalable, reliable architecture.*
+
+
+<img width="1664" height="990" alt="Screenshot 2025-09-14 at 4 41 59 PM" src="https://github.com/user-attachments/assets/49d2470c-75fa-4545-9a18-e1fb2a7553db" />
