@@ -687,36 +687,6 @@ echo "• Marquez API: http://localhost:5007"
 
 ---
 
-## 🎪 **Demo Execution Guide**
-
-### **15-Minute Demo Flow**
-
-```bash
-# Demo preparation (run before presentation)
-./integration_test.sh
-python validate_working_lineage.py
-
-# During demo:
-# 1. Show architecture (5 min)
-open http://localhost:3000  # Marquez lineage visualization
-
-# 2. Demonstrate data sources (3 min)
-docker exec mongodb mongosh -u admin -p admin123 \
-  --authenticationDatabase admin ecommerce \
-  --eval "db.customer_profiles.find().limit(2).pretty()"
-
-# 3. Show lineage tracking (5 min)
-# Navigate Marquez web interface
-# Show dataset relationships and column lineage
-
-# 4. Business value demonstration (2 min)
-docker exec astro-marquez-tutorial_db9165-postgres-1 \
-  psql -U postgres -d lineagetutorial -c \
-  "SELECT name, customer_segment, total_spent FROM customer_analytics ORDER BY total_spent DESC;"
-```
-
----
-
 ## 🏆 **Enterprise Readiness Assessment**
 
 | Requirement | Implementation | Status |
@@ -729,8 +699,6 @@ docker exec astro-marquez-tutorial_db9165-postgres-1 \
 | **Scalability** | Containerized, cloud-ready | ✅ Architecture Ready |
 | **Performance** | <2s API, <0.5s queries | ✅ Exceeds Targets |
 | **Reliability** | Error handling, recovery | ✅ Tested |
-
-**Overall Assessment**: ✅ **Enterprise Production-Ready** with comprehensive lineage tracking, multi-source integration, and business analytics capabilities.
 
 ---
 
