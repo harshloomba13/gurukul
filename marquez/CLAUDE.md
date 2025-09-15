@@ -94,7 +94,7 @@ graph TB
 
 ```bash
 # Clone the project repository
-git clone <repository-url>
+git clone https://github.com/harshloomba13/gurukul.git
 cd marquez/astro-marquez-tutorial
 
 # Verify system requirements
