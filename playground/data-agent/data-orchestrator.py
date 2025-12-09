@@ -321,24 +321,24 @@ workflow.add_node("synthesizer", synthesizer_node)
 workflow.add_edge(START, "planner")
 
 graph = workflow.compile()
-from IPython.display import Image, display
+#from IPython.display import Image, display
 
-display(Image(graph.get_graph().draw_png()))
+#display(Image(graph.get_graph().draw_png()))
 
 import json
 
-query = "Chart the current market capitalization of the top 5 banks in the US?"
-print(f"Query: {query}")
+#query = "Chart the current market capitalization of the top 5 banks in the US?"
+#print(f"Query: {query}")
 
-state = {
-            "messages": [HumanMessage(content=query)],
-            "user_query": query,
-            "enabled_agents": ["web_researcher", "chart_generator", 
-                               "chart_summarizer", "synthesizer"],
-        }
-graph.invoke(state)
+#state = {
+#            "messages": [HumanMessage(content=query)],
+#            "user_query": query,
+#            "enabled_agents": ["web_researcher", "chart_generator", 
+#                               "chart_summarizer", "synthesizer"],
+#        }
+#graph.invoke(state, config={"recursion_limit": 100})
 
-print("--------------------------------")
+#print("--------------------------------")
 
 
 query = "Identify current regulatory changes for the financial services industry in the US."
@@ -350,6 +350,6 @@ state = {
             "enabled_agents": ["web_researcher", "chart_generator", 
                                "chart_summarizer", "synthesizer"],
         }
-graph.invoke(state)
+graph.invoke(state, config={"recursion_limit": 100})
 
 print("--------------------------------")
