@@ -2,6 +2,10 @@ from __future__ import annotations
 # pyright: reportMissingImports=false, reportMissingTypeStubs=false, reportIncompatibleMethodOverride=false
 import warnings
 
+# Set matplotlib to use non-interactive backend to avoid GUI issues
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+
 warnings.filterwarnings(
     "ignore",
     message=r"Valid config keys have changed in V2",
@@ -92,8 +96,10 @@ def python_repl_tool(
     """Use this to execute python code. You will be used to execute python code
     that generates charts. Only print the chart once.
     This is visible to the user."""
+    # Ensure matplotlib uses non-interactive backend
+    matplotlib_setup = "import matplotlib; matplotlib.use('Agg')\n"
     try:
-        result = repl.run(code)
+        result = repl.run(matplotlib_setup + code)
     except BaseException as e:
         return f"Failed to execute. Error: {repr(e)}"
     result_str = (
