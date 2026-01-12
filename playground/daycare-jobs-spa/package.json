@@ -3,14 +3,18 @@
   "version": "1.0.0",
   "description": "SPA for teachers to find daycare jobs in Vancouver area",
   "private": true,
+  "proxy": "http://localhost:4000",
   "dependencies": {
+    "express": "^4.19.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "sqlite3": "^5.1.7"
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:server": "node server.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -33,4 +37,3 @@
     ]
   }
 }
-

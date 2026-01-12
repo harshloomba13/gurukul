@@ -4,24 +4,40 @@ import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 function Login() {
+  const [mode, setMode] = useState('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('Teacher');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, loginAsGuest } = useAuth();
+  const { login, signup, loginAsGuest, authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!name.trim() && !email.trim()) {
-      setError('Please enter a name or email to continue.');
+    if (!email.trim() || !password) {
+      setError('Email and password are required.');
       return;
     }
 
-    login(name.trim(), email.trim(), role);
-    navigate('/dashboard');
+    if (mode === 'signup' && !name.trim()) {
+      setError('Name is required to create an account.');
+      return;
+    }
+
+    const result =
+      mode === 'signup'
+        ? await signup(name.trim(), email.trim(), password, role)
+        : await login(email.trim(), password);
+
+    if (result.ok) {
+      navigate('/dashboard');
+      return;
+    }
+
+    setError(result.error || 'Unable to sign in.');
   };
 
   const handleGuestLogin = () => {
@@ -49,8 +65,8 @@ function Login() {
           <h2>Find your next classroom in minutes.</h2>
           <p>
             Browse pre-loaded openings by region, then refine with instant
-            search. Everything runs client-side so you can prototype analytics
-            and monetization later without backend changes.
+            search. Sign in with a secure server-backed account to unlock a
+            personalized job dashboard.
           </p>
           <div className="stat-grid">
             <div className="stat">
@@ -70,16 +86,40 @@ function Login() {
 
         <div className="panel login-card">
           <h3>Quick access</h3>
+          <div className="auth-toggle">
+            <button
+              type="button"
+              className={`toggle-btn ${mode === 'login' ? 'active' : ''}`}
+              onClick={() => {
+                setMode('login');
+                setError('');
+              }}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              className={`toggle-btn ${mode === 'signup' ? 'active' : ''}`}
+              onClick={() => {
+                setMode('signup');
+                setError('');
+              }}
+            >
+              Create account
+            </button>
+          </div>
           <form onSubmit={handleLogin}>
-            <label>
-              Name
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Teacher name"
-              />
-            </label>
+            {mode === 'signup' && (
+              <label>
+                Name
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Teacher name"
+                />
+              </label>
+            )}
             <label>
               Email
               <input
@@ -90,21 +130,33 @@ function Login() {
               />
             </label>
             <label>
-              Access type
-              <select value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="Teacher">Teacher</option>
-                <option value="Guest">Guest</option>
-              </select>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
             </label>
+            {mode === 'signup' && (
+              <label>
+                Access type
+                <select value={role} onChange={(e) => setRole(e.target.value)}>
+                  <option value="Teacher">Teacher</option>
+                  <option value="Guest">Guest</option>
+                </select>
+              </label>
+            )}
             {error && <div className="error-message">{error}</div>}
             <div className="login-actions">
-              <button type="submit" className="btn btn-primary">
-                Sign in
+              <button type="submit" className="btn btn-primary" disabled={authLoading}>
+                {authLoading ? 'Working...' : mode === 'signup' ? 'Create account' : 'Sign in'}
               </button>
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={handleGuestLogin}
+                disabled={authLoading}
               >
                 Continue as guest
               </button>
@@ -112,7 +164,7 @@ function Login() {
           </form>
           <div className="status">
             <div className="dot"></div>
-            Client-side auth only. No data leaves the browser.
+            Server-side auth with SQLite storage.
           </div>
         </div>
       </section>
@@ -121,4 +173,3 @@ function Login() {
 }
 
 export default Login;
-
