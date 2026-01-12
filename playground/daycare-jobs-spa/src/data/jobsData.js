@@ -377,7 +377,7 @@ export const REGIONS = [
   'Burnaby',
   'New Westminster',
   'White Rock',
+  'Other areas',
 ];
 
 export const JOB_TYPES = ['All', 'Full-time', 'Part-time'];
-

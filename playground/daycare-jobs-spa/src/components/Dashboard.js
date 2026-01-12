@@ -15,12 +15,18 @@ function Dashboard() {
     trackEvent('dashboard_view', { region: selectedRegion, type: selectedType });
   }, [selectedRegion, selectedType, trackEvent]);
 
+  const isOtherAreas = selectedRegion === 'Other areas';
+
   // Filter jobs based on search and filters
   const filteredJobs = useMemo(() => {
+    if (isOtherAreas) {
+      return [];
+    }
+
     let jobs = JOBS_DATA;
 
     // Filter by region
-    if (selectedRegion !== 'All') {
+    if (selectedRegion !== 'All' && !isOtherAreas) {
       jobs = jobs.filter((job) => job.region === selectedRegion);
     }
 
@@ -99,7 +105,8 @@ function Dashboard() {
   };
 
   const handleGoogleSearch = () => {
-    const url = getGoogleSearchUrl(selectedRegion !== 'All' ? selectedRegion : null, selectedType !== 'All' ? selectedType : null);
+    const region = !isOtherAreas && selectedRegion !== 'All' ? selectedRegion : null;
+    const url = getGoogleSearchUrl(region, selectedType !== 'All' ? selectedType : null);
     trackEvent('google_search_click', { region: selectedRegion, type: selectedType });
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -167,7 +174,7 @@ function Dashboard() {
               className={`tab ${activeTab === region ? 'active' : ''}`}
               onClick={() => handleTabClick(region)}
             >
-              {region}
+              {region === 'Other areas' ? 'Other areas' : region}
             </button>
           ))}
         </div>
@@ -193,7 +200,7 @@ function Dashboard() {
                       <p>
                         Try adjusting your search or filters. Can't find what
                         you're looking for? Search on Google for more opportunities
-                        {selectedRegion !== 'All' ? ` in ${selectedRegion}` : ' in other regions'}.
+                        {selectedRegion !== 'All' && !isOtherAreas ? ` in ${selectedRegion}` : ' in other regions'}.
                       </p>
                       <button 
                         className="btn btn-google" 
@@ -206,7 +213,7 @@ function Dashboard() {
                           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                         </svg>
-                        Search Google for {selectedRegion !== 'All' ? `${selectedRegion} ` : ''}Daycare Jobs
+                        Search Google for {selectedRegion !== 'All' && !isOtherAreas ? `${selectedRegion} ` : ''}Daycare Jobs
                       </button>
                     </div>
                   </td>
@@ -237,9 +244,9 @@ function Dashboard() {
 
         <footer className="footer">
           <div>
-            {filteredJobs.length === 0 ? (
-              <div className="no-results-footer">
-                <p>Can't find a match? Use the search box to refine or swap regions.</p>
+              {filteredJobs.length === 0 ? (
+                <div className="no-results-footer">
+                <p>Can't find a match? Use the search box to refine or explore other regions.</p>
                 <button 
                   className="btn btn-google" 
                   onClick={handleGoogleSearch}
@@ -265,7 +272,7 @@ function Dashboard() {
             <button 
               className="btn btn-google btn-small" 
               onClick={handleGoogleSearch}
-              title={`Search Google for more daycare jobs${selectedRegion !== 'All' ? ` in ${selectedRegion}` : ' in Vancouver area'}`}
+              title={`Search Google for more daycare jobs${selectedRegion !== 'All' && !isOtherAreas ? ` in ${selectedRegion}` : ' in Vancouver area'}`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -283,4 +290,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
