@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CareLink Jobs - Vancouver Area Daycare Roles</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+      :root {
+        --bg: #f2efe9;
+        --bg-deep: #e7e0d4;
+        --ink: #1a1a1a;
+        --muted: #5f5a52;
+        --accent: #e06c3b;
+        --accent-2: #2c6e7b;
+        --card: #fdfaf5;
+        --border: #d9cfc1;
+        --shadow: 0 18px 45px rgba(22, 18, 12, 0.14);
+        --shadow-soft: 0 10px 25px rgba(22, 18, 12, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        color: var(--ink);
+        background: radial-gradient(
+            circle at top left,
+            rgba(224, 108, 59, 0.14),
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at top right,
+            rgba(44, 110, 123, 0.12),
+            transparent 45%
+          ),
+          linear-gradient(160deg, var(--bg), var(--bg-deep));
+        min-height: 100vh;
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 36px 20px 80px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .brand h1 {
+        font-family: "Fraunces", serif;
+        font-size: clamp(2rem, 3vw, 2.9rem);
+        margin: 0;
+      }
+
+      .brand p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.6);
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+
+      .pill span {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+        gap: 26px;
+        margin-top: 32px;
+        align-items: stretch;
+      }
+
+      .panel {
+        background: var(--card);
+        border-radius: 22px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at bottom left,
+          rgba(224, 108, 59, 0.12),
+          transparent 55%
+        );
+        pointer-events: none;
+      }
+
+      .hero h2 {
+        font-family: "Fraunces", serif;
+        font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+        margin: 0 0 12px;
+      }
+
+      .hero p {
+        color: var(--muted);
+        margin: 0 0 20px;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+      }
+
+      .stat {
+        background: #fff7ef;
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid #f3d8c7;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.4rem;
+        color: var(--accent);
+      }
+
+      .stat span {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .login-card {
+        display: grid;
+        gap: 14px;
+      }
+
+      .login-card label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 0.9rem;
+      }
+
+      .login-card input,
+      .login-card select {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-family: inherit;
+      }
+
+      .login-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        border: none;
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(224, 108, 59, 0.25);
+      }
+
+      .btn-secondary {
+        background: #f0f6f7;
+        color: var(--accent-2);
+        border: 1px solid #cfe4e8;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .app {
+        margin-top: 32px;
+        display: none;
+        flex-direction: column;
+        gap: 22px;
+        animation: fadeIn 0.45s ease;
+      }
+
+      .app.active {
+        display: flex;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.4fr) minmax(0, 0.4fr);
+        gap: 14px;
+      }
+
+      .search,
+      .filter {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-family: inherit;
+      }
+
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .tab {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+      }
+
+      .tab.active {
+        background: var(--accent-2);
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .table-wrap {
+        background: var(--card);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+
+      thead {
+        background: #f6efe4;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 14px 16px;
+        border-bottom: 1px solid #eadfce;
+      }
+
+      tbody tr:hover {
+        background: #fff6ee;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background: #f2e9dc;
+        color: var(--muted);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        animation: pulse 2s infinite;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .auth-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+      }
+
+      .auth-bar span {
+        font-weight: 600;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.6;
+        }
+        50% {
+          transform: scale(1.3);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <div class="brand">
+          <div class="pill"><span>CareLink</span> Daycare Jobs Hub</div>
+          <h1>Vancouver Metro Daycare Roles</h1>
+          <p>
+            A focused hiring dashboard for teachers looking across Vancouver,
+            Surrey, Langley, Abbotsford, Chilliwack, and nearby areas.
+          </p>
+        </div>
+        <div class="auth-bar" id="auth-bar">
+          <span id="auth-label">Guest</span>
+          <button class="btn btn-secondary" id="logout-btn">Log out</button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="panel">
+          <h2>Find your next classroom in minutes.</h2>
+          <p>
+            Browse pre-loaded openings by region, then refine with instant
+            search. Everything runs client-side so you can prototype analytics
+            and monetization later without backend changes.
+          </p>
+          <div class="stat-grid">
+            <div class="stat">
+              <strong id="stat-count">0</strong>
+              <span>Open roles</span>
+            </div>
+            <div class="stat">
+              <strong>6+</strong>
+              <span>Featured regions</span>
+            </div>
+            <div class="stat">
+              <strong>Same-day</strong>
+              <span>Response goal</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel login-card" id="login-panel">
+          <h3>Quick access</h3>
+          <label>
+            Name
+            <input type="text" id="login-name" placeholder="Teacher name" />
+          </label>
+          <label>
+            Email
+            <input type="email" id="login-email" placeholder="teacher@email.com" />
+          </label>
+          <label>
+            Access type
+            <select id="login-role">
+              <option value="Teacher">Teacher</option>
+              <option value="Guest">Guest</option>
+            </select>
+          </label>
+          <div class="login-actions">
+            <button class="btn btn-primary" id="login-btn">
+              Sign in
+            </button>
+            <button class="btn btn-secondary" id="guest-btn">
+              Continue as guest
+            </button>
+          </div>
+          <div class="status">
+            <div class="dot"></div>
+            Client-side auth only. No data leaves the browser.
+          </div>
+        </div>
+      </section>
+
+      <main class="app" id="app">
+        <div class="toolbar">
+          <input
+            class="search"
+            id="search-input"
+            type="search"
+            placeholder="Search daycare, role, region, or schedule"
+          />
+          <select class="filter" id="region-filter">
+            <option value="All">All regions</option>
+          </select>
+          <select class="filter" id="type-filter">
+            <option value="All">All job types</option>
+          </select>
+        </div>
+
+        <div class="tabs" id="region-tabs"></div>
+
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Daycare</th>
+                <th>Region</th>
+                <th>Role</th>
+                <th>Schedule</th>
+                <th>Pay</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-body"></tbody>
+          </table>
+        </section>
+
+        <footer class="footer">
+          <div>
+            Can't find a match? Use the search box to refine or swap regions.
+          </div>
+          <div id="results-count">0 results</div>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      const JOBS = [
+        {
+          daycare: "Cedar Grove Kids",
+          region: "Vancouver",
+          role: "ECE Lead Teacher",
+          schedule: "Full-time · 8:00-4:00",
+          pay: "$25-$30/hr",
+          type: "Full-time",
+          status: "Interviewing now",
+        },
+        {
+          daycare: "False Creek Early Years",
+          region: "Vancouver",
+          role: "Infant Toddler Educator",
+          schedule: "Full-time · 7:30-3:30",
+          pay: "$27-$32/hr",
+          type: "Full-time",
+          status: "Urgent hire",
+        },
+        {
+          daycare: "North Shore Tots",
+          region: "North Vancouver",
+          role: "ECE Assistant",
+          schedule: "Part-time · 9:00-2:00",
+          pay: "$20-$23/hr",
+          type: "Part-time",
+          status: "Open",
+        },
+        {
+          daycare: "Fraser Learning Loft",
+          region: "Surrey",
+          role: "Preschool Teacher",
+          schedule: "Full-time · 8:30-4:30",
+          pay: "$24-$28/hr",
+          type: "Full-time",
+          status: "Open",
+        },
+        {
+          daycare: "Skyline Sprouts",
+          region: "Surrey",
+          role: "Program Supervisor",
+          schedule: "Full-time · 9:00-5:00",
+          pay: "$30-$35/hr",
+          type: "Full-time",
+          status: "Hiring this week",
+        },
+        {
+          daycare: "Willowbrook Little Minds",
+          region: "Langley",
+          role: "ECE Teacher",
+          schedule: "Full-time · 8:00-4:00",
+          pay: "$23-$27/hr",
+          type: "Full-time",
+          status: "Open",
+        },
+        {
+          daycare: "Fort Langley Co-Op",
+          region: "Langley",
+          role: "ECE Assistant",
+          schedule: "Part-time · 10:00-2:30",
+          pay: "$19-$21/hr",
+          type: "Part-time",
+          status: "Weekend interviews",
+        },
+        {
+          daycare: "Abbotsford Creative Kids",
+          region: "Abbotsford",
+          role: "Lead Teacher",
+          schedule: "Full-time · 7:45-3:45",
+          pay: "$26-$31/hr",
+          type: "Full-time",
+          status: "Open",
+        },
+        {
+          daycare: "Chilliwack Sunflower",
+          region: "Chilliwack",
+          role: "ECE Educator",
+          schedule: "Full-time · 8:00-4:00",
+          pay: "$24-$29/hr",
+          type: "Full-time",
+          status: "Open",
+        },
+        {
+          daycare: "Meadowridge Kids Club",
+          region: "Maple Ridge",
+          role: "After School Facilitator",
+          schedule: "Part-time · 2:30-6:00",
+          pay: "$20-$22/hr",
+          type: "Part-time",
+          status: "Open",
+        },
+        {
+          daycare: "Coquitlam Bright Beginnings",
+          region: "Coquitlam",
+          role: "ECE Supervisor",
+          schedule: "Full-time · 8:30-4:30",
+          pay: "$31-$36/hr",
+          type: "Full-time",
+          status: "Interviewing now",
+        },
+        {
+          daycare: "Delta Discovery House",
+          region: "Delta",
+          role: "Infant Room Teacher",
+          schedule: "Full-time · 7:30-3:30",
+          pay: "$26-$30/hr",
+          type: "Full-time",
+          status: "Open",
+        },
+      ];
+
+      const app = document.getElementById("app");
+      const jobsBody = document.getElementById("jobs-body");
+      const regionFilter = document.getElementById("region-filter");
+      const typeFilter = document.getElementById("type-filter");
+      const searchInput = document.getElementById("search-input");
+      const resultsCount = document.getElementById("results-count");
+      const regionTabs = document.getElementById("region-tabs");
+      const statCount = document.getElementById("stat-count");
+      const authLabel = document.getElementById("auth-label");
+      const logoutBtn = document.getElementById("logout-btn");
+      const loginPanel = document.getElementById("login-panel");
+      const loginBtn = document.getElementById("login-btn");
+      const guestBtn = document.getElementById("guest-btn");
+      const loginName = document.getElementById("login-name");
+      const loginEmail = document.getElementById("login-email");
+      const loginRole = document.getElementById("login-role");
+
+      const uniqueRegions = ["All", ...new Set(JOBS.map((job) => job.region))];
+      const uniqueTypes = ["All", ...new Set(JOBS.map((job) => job.type))];
+
+      const state = {
+        region: "All",
+        type: "All",
+        query: "",
+      };
+
+      const STORAGE_KEY = "carelink-auth";
+
+      function setAuth(label, role) {
+        authLabel.textContent = `${label} (${role})`;
+        loginPanel.style.display = "none";
+        app.classList.add("active");
+      }
+
+      function resetAuth() {
+        authLabel.textContent = "Guest";
+        loginPanel.style.display = "grid";
+        app.classList.remove("active");
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      function saveAuth(name, email, role) {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ name, email, role })
+        );
+      }
+
+      function loadAuth() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          resetAuth();
+          return;
+        }
+        try {
+          const auth = JSON.parse(stored);
+          const label = auth.name || auth.email || "Teacher";
+          setAuth(label, auth.role || "Teacher");
+        } catch (error) {
+          resetAuth();
+        }
+      }
+
+      function populateFilters() {
+        uniqueRegions.forEach((region) => {
+          const option = document.createElement("option");
+          option.value = region;
+          option.textContent = region;
+          regionFilter.appendChild(option);
+        });
+        uniqueTypes.forEach((type) => {
+          const option = document.createElement("option");
+          option.value = type;
+          option.textContent = type;
+          typeFilter.appendChild(option);
+        });
+      }
+
+      function populateTabs() {
+        uniqueRegions.forEach((region) => {
+          if (region === "All") {
+            return;
+          }
+          const tab = document.createElement("button");
+          tab.className = "tab";
+          tab.textContent = region;
+          tab.addEventListener("click", () => {
+            state.region = region;
+            regionFilter.value = region;
+            updateTabs();
+            renderJobs();
+          });
+          regionTabs.appendChild(tab);
+        });
+        updateTabs();
+      }
+
+      function updateTabs() {
+        const tabs = regionTabs.querySelectorAll(".tab");
+        tabs.forEach((tab) => {
+          tab.classList.toggle("active", tab.textContent === state.region);
+        });
+      }
+
+      function matches(job) {
+        const query = state.query.toLowerCase();
+        const text = `${job.daycare} ${job.region} ${job.role} ${job.schedule} ${job.status}`.toLowerCase();
+        const regionMatch = state.region === "All" || job.region === state.region;
+        const typeMatch = state.type === "All" || job.type === state.type;
+        const searchMatch = !query || text.includes(query);
+        return regionMatch && typeMatch && searchMatch;
+      }
+
+      function renderJobs() {
+        const results = JOBS.filter(matches);
+        jobsBody.innerHTML = "";
+        results.forEach((job) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><strong>${job.daycare}</strong></td>
+            <td><span class="badge">${job.region}</span></td>
+            <td>${job.role}</td>
+            <td>${job.schedule}</td>
+            <td>${job.pay}</td>
+            <td>${job.status}</td>
+          `;
+          jobsBody.appendChild(row);
+        });
+        resultsCount.textContent = `${results.length} results`;
+        statCount.textContent = JOBS.length;
+      }
+
+      searchInput.addEventListener("input", (event) => {
+        state.query = event.target.value;
+        renderJobs();
+      });
+
+      regionFilter.addEventListener("change", (event) => {
+        state.region = event.target.value;
+        updateTabs();
+        renderJobs();
+      });
+
+      typeFilter.addEventListener("change", (event) => {
+        state.type = event.target.value;
+        renderJobs();
+      });
+
+      loginBtn.addEventListener("click", () => {
+        const name = loginName.value.trim();
+        const email = loginEmail.value.trim();
+        const role = loginRole.value;
+        if (!name && !email) {
+          alert("Add a name or email to continue.");
+          return;
+        }
+        saveAuth(name || "Teacher", email, role);
+        setAuth(name || email, role);
+      });
+
+      guestBtn.addEventListener("click", () => {
+        saveAuth("Guest", "", "Guest");
+        setAuth("Guest", "Guest");
+      });
+
+      logoutBtn.addEventListener("click", () => {
+        resetAuth();
+      });
+
+      populateFilters();
+      populateTabs();
+      renderJobs();
+      loadAuth();
+    </script>
+  </body>
+</html>
