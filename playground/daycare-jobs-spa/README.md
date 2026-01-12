@@ -4,7 +4,8 @@ A Single Page Application (SPA) for teachers to find daycare jobs in Vancouver, 
 
 ## Features
 
-- **Client-side Authentication**: Login/signup and guest access (all stored locally)
+- **Server-side Authentication**: Signup/login stored in SQLite with server verification
+- **Guest Access**: Quick local guest sign-in for demos
 - **Job Search**: Search across daycare names, roles, regions, schedules, and keywords
 - **Regional Filtering**: Filter jobs by region with quick-access tabs
 - **Job Type Filtering**: Filter by Full-time or Part-time positions
@@ -35,11 +36,16 @@ npm install
 npm start
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+4. In a second terminal, start the auth server:
+```bash
+npm run start:server
+```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Usage
 
-1. **Login**: Enter your name/email and select your role (Teacher or Guest), or continue as guest
+1. **Login**: Create an account or sign in with your email and password, or continue as guest
 2. **Browse Jobs**: View all available positions in the table
 3. **Filter by Region**: Click region tabs or use the dropdown filter
 4. **Filter by Type**: Use the job type dropdown to filter Full-time or Part-time
@@ -67,6 +73,7 @@ All events are stored in `localStorage` under the key `carelink-analytics` and c
 daycare-jobs-spa/
 ├── public/
 │   └── index.html
+├── server.js
 ├── src/
 │   ├── components/
 │   │   ├── Login.js
@@ -102,4 +109,3 @@ daycare-jobs-spa/
 ## License
 
 This project is for demonstration purposes.
-

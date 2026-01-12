@@ -53,6 +53,33 @@
   margin: 0 0 8px;
 }
 
+.auth-toggle {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: #f7f1e9;
+  border: 1px solid #ecdccd;
+  width: fit-content;
+}
+
+.toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.toggle-btn.active {
+  background: #fff;
+  color: var(--accent);
+  box-shadow: 0 4px 10px rgba(37, 65, 77, 0.08);
+}
+
 .login-card label {
   display: flex;
   flex-direction: column;
@@ -125,4 +152,3 @@
     grid-template-columns: 1fr;
   }
 }
-
