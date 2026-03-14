@@ -1,3 +1,17 @@
 .idea
 .venv
 .env
+# local envs
+**/week2_env/
+**/.venv/
+**/site-packages/
+
+# local envs
+**/week2_env/
+**/.venv/
+**/site-packages/
+
+# local envs
+**/week2_env/
+**/.venv/
+**/site-packages/
