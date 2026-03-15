@@ -1,0 +1,273 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 32px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.4fr) minmax(0, 0.4fr);
+  gap: 14px;
+}
+
+.search,
+.filter {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.search:focus,
+.filter:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(224, 108, 59, 0.1);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tab {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.tab.active {
+  background: var(--accent-2);
+  color: #fff;
+  border-color: transparent;
+}
+
+.table-wrap {
+  background: var(--card);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  min-width: 800px;
+}
+
+thead {
+  background: #f6efe4;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eadfce;
+}
+
+th {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+tbody tr {
+  transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+  background: #fff6ee;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #f2e9dc;
+  color: var(--muted);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.status-interviewing-now {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-badge.status-urgent-hire {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-badge.status-hiring-this-week {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-badge.status-weekend-interviews {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+
+.no-results strong {
+  display: block;
+  font-size: 1.2rem;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.no-results p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.results-count {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.no-results-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.no-results-footer p {
+  margin: 0;
+}
+
+.btn-google {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #5f6368;
+  border: 1px solid #dadce0;
+  padding: 10px 16px;
+  border-radius: 24px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-google:hover {
+  box-shadow: 0 2px 4px rgba(60, 64, 67, 0.15);
+  transform: translateY(-1px);
+  background: #f8f9fa;
+}
+
+.btn-google:active {
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
+  transform: translateY(0);
+}
+
+.btn-google svg {
+  flex-shrink: 0;
+}
+
+.btn-google.btn-small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  gap: 6px;
+}
+
+.btn-google.btn-small svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .no-results-footer {
+    width: 100%;
+  }
+
+  .btn-google.btn-small {
+    font-size: 0.8rem;
+    padding: 8px 14px;
+  }
+}
