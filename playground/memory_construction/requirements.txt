@@ -1,0 +1,33 @@
+# python package requirements file
+
+# Note to our Learners: Our courses are created at a specific point in time. The models and libraries used will naturally change over time.
+# If you download and run the notebooks locally, you should create a Python virtual environment  
+# with the Python version matching the one used in the course and use this requirements.txt file to install the required Python packages.
+# Due to the wide diversity of platforms and environments, DeepLearning does not explicitly support running locally. However, if you encounter
+# issues, the course support channel is a good place to ask questions.
+
+
+# note which revision of python, for example 3.9.6
+# in this file, insert all the pip install needs, include revision
+
+#for example:
+#torch==2.0.1
+#matplotlib==3.7.2
+
+langchain-oracledb==1.2.0
+langchain-huggingface==1.2.1
+sentence-transformers==2.6.1
+langchain-community==0.4.1
+langchain-openai==1.1.12
+datasets==4.8.4
+langchain==1.2.13
+tavily-python==0.7.23
+pydantic==2.12.5
+oracledb==3.4.2
+openai==2.30.0
+python-dotenv==1.2.2
+dotenv==0.9.9
+arxiv==2.4.1
+pymupdf==1.27.2.2
+numpy==1.26.4
+torch==2.2.2
