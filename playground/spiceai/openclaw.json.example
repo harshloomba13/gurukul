@@ -1,0 +1,10 @@
+{
+  agents: {
+    defaults: {
+      workspace: "/Users/harshloomba/Documents/gurukul/playground/spiceai/openclaw-workspace",
+    },
+  },
+  tools: {
+    profile: "coding",
+  },
+}
