@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: spiceai-postgres
+    environment:
+      POSTGRES_DB: spiceai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - spiceai-postgres-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+
+  spiceai:
+    image: spiceai/spiceai:latest-models
+    container_name: spiceai-runtime
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    ports:
+      - "8090:8090"
+      - "9090:9090"
+      - "50051:50051"
+    volumes:
+      - ./spicepod.yaml:/app/spicepod.yaml:ro
+    command: ["--http", "0.0.0.0:8090", "--metrics", "0.0.0.0:9090", "--flight", "0.0.0.0:50051"]
+
+volumes:
+  spiceai-postgres-data:

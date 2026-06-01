@@ -1,0 +1,11 @@
+{
+  "model": "spice_assistant",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Answer in one short sentence: what should OpenClaw call when it runs in Docker?"
+    }
+  ],
+  "max_completion_tokens": 24,
+  "temperature": 0
+}

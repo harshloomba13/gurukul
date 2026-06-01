@@ -1,0 +1,36 @@
+version: v1
+kind: Spicepod
+name: spiceai
+secrets:
+  - from: env
+    name: env
+datasets:
+  - from: postgres:public.project_context
+    name: project_context
+    params:
+      pg_host: ${ secrets:PG_HOST }
+      pg_port: ${ secrets:PG_PORT }
+      pg_user: ${ secrets:PG_USER }
+      pg_pass: ${ secrets:PG_PASSWORD }
+      pg_db: ${ secrets:PG_DB }
+      pg_sslmode: disable
+  - from: postgres:public.integration_targets
+    name: integration_targets
+    params:
+      pg_host: ${ secrets:PG_HOST }
+      pg_port: ${ secrets:PG_PORT }
+      pg_user: ${ secrets:PG_USER }
+      pg_pass: ${ secrets:PG_PASSWORD }
+      pg_db: ${ secrets:PG_DB }
+      pg_sslmode: disable
+models:
+  - from: huggingface:huggingface.co/itlwas/TinyLlama-1.1B-Chat-v1.0-Q4_K_M-GGUF
+    name: spice_assistant
+    files:
+      - path: tinyllama-1.1b-chat-v1.0-q4_k_m.gguf
+    params:
+      model_type: llama
+      system_prompt: |
+        You are the SpiceAI runtime behind OpenClaw.
+        Prefer grounded answers based on available datasets and SQL access.
+        Keep outputs direct and operational.
