@@ -1,6 +1,13 @@
 .idea
 .venv
 .env
+.DS_Store
+__pycache__/
+*.pyc
+*.safetensors
+.venv-*/
+.venv*/
+playground/harness/Qwen/
 # local envs
 **/week2_env/
 **/.venv/

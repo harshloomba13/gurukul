@@ -52,5 +52,16 @@ Script generator for negotiation emails/convos
 
 Anonymous peer comparisons and insights
 
+## Quick Prototype App
+Run the local Streamlit prototype to explore:
+- personalized roadmap creation
+- roadmap item to resource mapping
+- auto-scheduled prep sessions
+- mock interview tracking
+- profile readiness scoring
+- salary negotiation support prompts
+
+Command:
+`streamlit run gurukul_quick_app.py`
 
 
