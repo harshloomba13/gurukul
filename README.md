@@ -59,9 +59,11 @@ Run the local Streamlit prototype to explore:
 - auto-scheduled prep sessions
 - mock interview tracking
 - profile readiness scoring
+  - uses resume and LinkedIn profile feedback signals such as ATS compliance, formatting, impact, and completeness
+  - outputs a readiness score that shows whether the user should keep optimizing, request an optional 1:1 review, or move into prep
+  - tracks readiness changes so profile improvements are visible before applications and interviews
 - salary negotiation support prompts
 
 Command:
 `streamlit run gurukul_quick_app.py`
-
 
