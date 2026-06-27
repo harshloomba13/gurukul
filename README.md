@@ -9,6 +9,8 @@ Optional 1:1 review with mentor/recruiter
 
 Score and track profile readiness
 
+Supporting spec: [Profile readiness documentation pack](docs/profile-readiness/README.md) for first-prototype scoring, signals, and acceptance criteria
+
 🛣️ 1. Personalized Roadmap Creation
 User defines target role (e.g., SDE, PM) and time frame (e.g., 30 days)
 
@@ -70,4 +72,3 @@ Run the local Streamlit prototype to explore:
 
 Command:
 `streamlit run gurukul_quick_app.py`
-
