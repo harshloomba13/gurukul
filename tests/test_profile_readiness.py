@@ -4,8 +4,11 @@ import unittest
 from datetime import datetime, timezone
 
 from profile_readiness import (
+    HISTORY_SESSION_KEY,
     ProfileReadinessInput,
+    append_history_entry,
     build_recalculation_requested_event,
+    build_history_entry,
     build_recommendation_completed_event,
     build_recommendation_started_event,
     build_recommendation_viewed_event,
@@ -13,7 +16,9 @@ from profile_readiness import (
     build_score_recalculated_event,
     calculate_readiness,
     generate_recommendations,
+    latest_score_delta,
     readiness_band_for_score,
+    recent_history_entries,
 )
 from profile_readiness.scoring import (
     CATEGORY_ATS,
@@ -175,6 +180,139 @@ class ProfileReadinessTests(unittest.TestCase):
         self.assertIsNone(result.category_scores[CATEGORY_IMPACT])
         self.assertEqual(result.category_statuses[CATEGORY_IMPACT], "withheld_unparseable")
         self.assertTrue(result.provisional)
+
+    def test_session_history_appends_and_returns_recent_entries_newest_last(self) -> None:
+        session_state = {}
+        first = calculate_readiness(
+            ProfileReadinessInput(
+                ats_score=50,
+                formatting_score=50,
+                impact_score=50,
+                linkedin_score=50,
+            )
+        )
+        second = calculate_readiness(
+            ProfileReadinessInput(
+                ats_score=70,
+                formatting_score=60,
+                impact_score=65,
+                linkedin_score=55,
+            )
+        )
+        third = calculate_readiness(
+            ProfileReadinessInput(
+                ats_score=80,
+                formatting_score=75,
+                impact_score=70,
+                linkedin_score=80,
+                mentor_review_score=90,
+            )
+        )
+
+        append_history_entry(
+            session_state,
+            first,
+            trigger_reason="initial_calculation",
+            timestamp=datetime(2026, 1, 1, 12, tzinfo=timezone.utc),
+        )
+        append_history_entry(
+            session_state,
+            second,
+            trigger_reason="resume_update",
+            timestamp=datetime(2026, 1, 2, 12, tzinfo=timezone.utc),
+        )
+        append_history_entry(
+            session_state,
+            third,
+            trigger_reason="mentor_recruiter_review_update",
+            timestamp=datetime(2026, 1, 3, 12, tzinfo=timezone.utc),
+        )
+
+        entries = recent_history_entries(session_state, limit=2)
+
+        self.assertIn(HISTORY_SESSION_KEY, session_state)
+        self.assertEqual([entry.score for entry in entries], [second.score, third.score])
+        self.assertEqual(
+            [entry.trigger_reason for entry in entries],
+            ["resume_update", "mentor_recruiter_review_update"],
+        )
+        self.assertTrue(entries[-1].human_reviewed)
+
+    def test_latest_score_delta_compares_to_previous_scored_entry(self) -> None:
+        first = calculate_readiness(
+            ProfileReadinessInput(
+                ats_score=55,
+                formatting_score=55,
+                impact_score=55,
+                linkedin_score=55,
+            )
+        )
+        unscored = calculate_readiness(ProfileReadinessInput(resume_uploaded=False))
+        latest = calculate_readiness(
+            ProfileReadinessInput(
+                ats_score=85,
+                formatting_score=75,
+                impact_score=80,
+                linkedin_score=75,
+            )
+        )
+
+        history = [
+            build_history_entry(first, trigger_reason="initial_calculation"),
+            build_history_entry(unscored, trigger_reason="resume_update"),
+            build_history_entry(latest, trigger_reason="resume_update"),
+        ]
+
+        self.assertEqual(latest_score_delta(history), latest.score - first.score)
+        self.assertIsNone(latest_score_delta(history[:1]))
+        self.assertIsNone(latest_score_delta(history[:2]))
+
+    def test_history_entries_are_privacy_safe(self) -> None:
+        session_state = {}
+        result = calculate_readiness(
+            ProfileReadinessInput(
+                ats_score=90,
+                formatting_score=40,
+                impact_score=80,
+                linkedin_score=20,
+                mentor_review_score=50,
+            )
+        )
+
+        entry = append_history_entry(
+            session_state,
+            result,
+            trigger_reason="resume_text",
+            timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        )
+        payload = entry.as_payload()
+
+        self.assertEqual(
+            set(payload),
+            {
+                "score",
+                "readiness_band",
+                "top_gap_category",
+                "provisional",
+                "human_reviewed",
+                "trigger_reason",
+                "timestamp",
+            },
+        )
+        self.assertEqual(payload["trigger_reason"], "profile_recalculated")
+        self.assertNotIn("category_scores", payload)
+        self.assertNotIn("weighted_gaps", payload)
+
+        stored_payload = repr(session_state).lower()
+        for forbidden in (
+            "resume_text",
+            "linkedin_text",
+            "external_profile_url",
+            "mentor_notes",
+            "recruiter_notes",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, stored_payload)
 
     def test_event_payloads_are_privacy_safe(self) -> None:
         occurred_at = datetime(2026, 1, 1, tzinfo=timezone.utc)

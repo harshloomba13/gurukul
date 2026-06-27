@@ -6,9 +6,13 @@ import streamlit as st
 
 from profile_readiness import (
     CATEGORY_LABELS,
+    HISTORY_SESSION_KEY,
     ProfileReadinessInput,
+    append_history_entry,
     calculate_readiness,
     generate_recommendations,
+    latest_score_delta,
+    recent_history_entries,
 )
 
 
@@ -75,6 +79,82 @@ def daily_schedule(hours_per_week: int) -> list[str]:
     return plan
 
 
+def profile_readiness_snapshot(
+    *,
+    resume_uploaded: bool,
+    resume_parseable: bool,
+    ats_score: int | None,
+    formatting_score: int | None,
+    impact_score: int | None,
+    linkedin_feedback_available: bool,
+    linkedin_score: int | None,
+    linkedin_confirmed_missing: bool,
+    mentor_review_available: bool,
+    mentor_review_score: int | None,
+) -> tuple[tuple[str, int | bool | None], ...]:
+    return (
+        ("resume_uploaded", resume_uploaded),
+        ("resume_parseable", resume_parseable),
+        ("ats_score", ats_score),
+        ("formatting_score", formatting_score),
+        ("impact_score", impact_score),
+        ("linkedin_feedback_available", linkedin_feedback_available),
+        ("linkedin_score", linkedin_score),
+        ("linkedin_confirmed_missing", linkedin_confirmed_missing),
+        ("mentor_review_available", mentor_review_available),
+        ("mentor_review_score", mentor_review_score),
+    )
+
+
+def history_trigger_reason(
+    previous_snapshot: tuple[tuple[str, int | bool | None], ...] | None,
+    current_snapshot: tuple[tuple[str, int | bool | None], ...],
+) -> str:
+    if previous_snapshot is None:
+        return "initial_calculation"
+
+    previous = dict(previous_snapshot)
+    current = dict(current_snapshot)
+    changed_inputs = {
+        key
+        for key, value in current.items()
+        if previous.get(key) != value
+    }
+    changed_groups = []
+    if changed_inputs & {"resume_uploaded", "resume_parseable", "ats_score", "formatting_score", "impact_score"}:
+        changed_groups.append("resume")
+    if changed_inputs & {"linkedin_feedback_available", "linkedin_score", "linkedin_confirmed_missing"}:
+        changed_groups.append("linkedin")
+    if changed_inputs & {"mentor_review_available", "mentor_review_score"}:
+        changed_groups.append("mentor_recruiter_review")
+
+    if not changed_groups:
+        return "profile_recalculated"
+    return f"{'_'.join(changed_groups)}_update"
+
+
+def score_delta_label(delta: int | None) -> str | None:
+    if delta is None:
+        return None
+    if delta > 0:
+        return f"+{delta} since previous score"
+    return f"{delta} since previous score"
+
+
+def history_entry_line(entry) -> str:
+    score_display = "Not scored" if entry.score is None else f"{entry.score}/100"
+    band_display = entry.readiness_band or "Resume needed"
+    gap_display = CATEGORY_LABELS.get(entry.top_gap_category, "No top gap")
+    review_display = "human reviewed" if entry.human_reviewed else "human review default"
+    provisional_display = "provisional" if entry.provisional else "final"
+    trigger_display = entry.trigger_reason.replace("_", " ")
+    return (
+        f"- {entry.timestamp}: {score_display} · {band_display} · "
+        f"top gap: {gap_display} · {provisional_display} · "
+        f"{review_display} · {trigger_display}"
+    )
+
+
 st.set_page_config(page_title="Gurukul Quick App", page_icon="🎯", layout="wide")
 
 st.title("🎯 Gurukul Quick App")
@@ -134,6 +214,28 @@ readiness = calculate_readiness(
         linkedin_confirmed_missing=linkedin_confirmed_missing,
     )
 )
+readiness_snapshot = profile_readiness_snapshot(
+    resume_uploaded=resume_uploaded,
+    resume_parseable=resume_parseable,
+    ats_score=ats_score,
+    formatting_score=formatting_score,
+    impact_score=impact_score,
+    linkedin_feedback_available=linkedin_feedback_available,
+    linkedin_score=linkedin_score,
+    linkedin_confirmed_missing=linkedin_confirmed_missing,
+    mentor_review_available=mentor_review_available,
+    mentor_review_score=mentor_review_score,
+)
+previous_readiness_snapshot = st.session_state.get("profile_readiness_history_snapshot")
+if previous_readiness_snapshot != readiness_snapshot:
+    append_history_entry(
+        st.session_state,
+        readiness,
+        trigger_reason=history_trigger_reason(previous_readiness_snapshot, readiness_snapshot),
+    )
+    st.session_state["profile_readiness_history_snapshot"] = readiness_snapshot
+readiness_history = recent_history_entries(st.session_state, limit=5)
+readiness_score_delta = latest_score_delta(st.session_state.get(HISTORY_SESSION_KEY, []))
 recommendations = generate_recommendations(readiness)
 resources = ROLE_RESOURCES[role]
 schedule = daily_schedule(hours_per_week)
@@ -142,7 +244,7 @@ metric_col_1, metric_col_2, metric_col_3, metric_col_4 = st.columns(4)
 metric_col_1.metric(
     "Profile readiness",
     f"{readiness.score}/100" if readiness.score is not None else "Not scored",
-    readiness.readiness_band or "Resume needed",
+    score_delta_label(readiness_score_delta) or readiness.readiness_band or "Resume needed",
 )
 metric_col_2.metric("Roadmap length", f"{weeks} weeks")
 metric_col_3.metric("Resource matches", len(resources))
@@ -190,6 +292,14 @@ with right_col:
             st.caption("Includes mentor/recruiter review input.")
         else:
             st.caption("Mentor/recruiter review uses a neutral default until human feedback is provided.")
+
+    st.markdown("**Recent readiness history**")
+    if readiness_score_delta is None:
+        st.caption("No previous scored recalculation yet.")
+    else:
+        st.caption(f"Score change from the previous scored recalculation: {readiness_score_delta:+d}.")
+    for history_entry in readiness_history:
+        st.write(history_entry_line(history_entry))
 
     st.markdown("**Recommended next actions**")
     for recommendation in recommendations:
