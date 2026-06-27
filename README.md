@@ -34,6 +34,10 @@ Match internal mentor availability for booked 1:1 sessions
 
 Dynamic adjustments for missed or rescheduled tasks
 
+Missed solo tasks move to the next open prep slot within the user's availability, shifting later unscheduled work only when needed
+
+Missed or rescheduled mentor sessions keep mentor availability as the scheduling constraint: release the missed booking, show matching internal mentor availability, and require user confirmation before booking a new 1:1 session
+
 🧪 4. Mock Exams & Interviews
 DSA/technical mock tests with scoring, timing, and analytics
 
