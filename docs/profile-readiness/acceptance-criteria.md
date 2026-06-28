@@ -1,6 +1,6 @@
 # Profile Readiness Acceptance Criteria
 
-These scenarios define expected user-facing behavior for the first profile readiness scoring prototype. They support the root [README](../../README.md) and do not replace its product scope.
+These scenarios define expected user-facing behavior for the first profile readiness scoring prototype. They support the root [README](../../README.md) and do not replace its product scope. They are acceptance checks for product behavior, not an implementation mandate for a specific UI layout.
 
 ## Scenarios
 
@@ -51,3 +51,7 @@ Given profile readiness tracking events are emitted, when event payloads are ins
 ### 12. Score History Explains Changes Over Time
 
 Given a user has multiple readiness recalculations, when they view score history, then Gurukul shows each score, band, score delta, trigger reason, and changed category without exposing private profile content.
+
+### 13. Privacy Expectations Are Visible To The User
+
+Given a user is asked to add resume, LinkedIn, or mentor/recruiter review information, when they review profile readiness, then Gurukul explains that recommendations use profile signals and does not imply that private content is shared with other users.
