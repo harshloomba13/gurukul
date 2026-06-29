@@ -7,6 +7,7 @@ import streamlit as st
 from profile_readiness import (
     CATEGORY_LABELS,
     HISTORY_SESSION_KEY,
+    ProfileReadinessHistoryEntry,
     ProfileReadinessInput,
     append_history_entry,
     calculate_readiness,
@@ -141,7 +142,7 @@ def score_delta_label(delta: int | None) -> str | None:
     return f"{delta} since previous score"
 
 
-def history_entry_line(entry) -> str:
+def history_entry_line(entry: ProfileReadinessHistoryEntry) -> str:
     score_display = "Not scored" if entry.score is None else f"{entry.score}/100"
     band_display = entry.readiness_band or "Resume needed"
     gap_display = CATEGORY_LABELS.get(entry.top_gap_category, "No top gap")
@@ -298,8 +299,11 @@ with right_col:
         st.caption("No previous scored recalculation yet.")
     else:
         st.caption(f"Score change from the previous scored recalculation: {readiness_score_delta:+d}.")
-    for history_entry in readiness_history:
-        st.write(history_entry_line(history_entry))
+    if readiness_history:
+        for history_entry in readiness_history:
+            st.write(history_entry_line(history_entry))
+    else:
+        st.caption("No readiness recalculations recorded in this session.")
 
     st.markdown("**Recommended next actions**")
     for recommendation in recommendations:

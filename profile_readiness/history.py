@@ -10,6 +10,7 @@ from .scoring import ProfileReadinessResult
 
 
 HISTORY_SESSION_KEY = "profile_readiness_score_history"
+HISTORY_STORAGE_POLICY = "session"
 DEFAULT_TRIGGER_REASON = "profile_recalculated"
 
 _SAFE_TRIGGER_REASON = re.compile(r"^[a-z0-9_:-]{1,80}$")
@@ -47,7 +48,7 @@ def append_history_entry(
     session_state: MutableMapping[str, Any],
     result: ProfileReadinessResult,
     *,
-    trigger_reason: str,
+    trigger_reason: str | None = DEFAULT_TRIGGER_REASON,
     timestamp: datetime | str | None = None,
     session_key: str = HISTORY_SESSION_KEY,
 ) -> ProfileReadinessHistoryEntry:
@@ -61,7 +62,7 @@ def append_history_entry(
 def build_history_entry(
     result: ProfileReadinessResult,
     *,
-    trigger_reason: str,
+    trigger_reason: str | None = DEFAULT_TRIGGER_REASON,
     timestamp: datetime | str | None = None,
 ) -> ProfileReadinessHistoryEntry:
     return ProfileReadinessHistoryEntry(
@@ -111,7 +112,9 @@ def _format_timestamp(timestamp: datetime | str | None) -> str:
     return timestamp
 
 
-def _safe_trigger_reason(trigger_reason: str) -> str:
+def _safe_trigger_reason(trigger_reason: str | None) -> str:
+    if not isinstance(trigger_reason, str):
+        return DEFAULT_TRIGGER_REASON
     normalized = trigger_reason.strip().lower()
     if not normalized:
         return DEFAULT_TRIGGER_REASON

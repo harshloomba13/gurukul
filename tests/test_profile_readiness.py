@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from profile_readiness import (
     HISTORY_SESSION_KEY,
+    HISTORY_STORAGE_POLICY,
     ProfileReadinessInput,
     append_history_entry,
     build_recalculation_requested_event,
@@ -182,6 +183,7 @@ class ProfileReadinessTests(unittest.TestCase):
         self.assertTrue(result.provisional)
 
     def test_session_history_appends_and_returns_recent_entries_newest_last(self) -> None:
+        self.assertEqual(HISTORY_STORAGE_POLICY, "session")
         session_state = {}
         first = calculate_readiness(
             ProfileReadinessInput(
@@ -302,6 +304,9 @@ class ProfileReadinessTests(unittest.TestCase):
         self.assertEqual(payload["trigger_reason"], "profile_recalculated")
         self.assertNotIn("category_scores", payload)
         self.assertNotIn("weighted_gaps", payload)
+
+        defaulted_entry = build_history_entry(result, trigger_reason=None)
+        self.assertEqual(defaulted_entry.trigger_reason, "profile_recalculated")
 
         stored_payload = repr(session_state).lower()
         for forbidden in (

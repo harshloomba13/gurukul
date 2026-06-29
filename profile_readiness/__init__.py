@@ -8,6 +8,7 @@ from .events import (
 )
 from .history import (
     HISTORY_SESSION_KEY,
+    HISTORY_STORAGE_POLICY,
     ProfileReadinessHistoryEntry,
     append_history_entry,
     build_history_entry,
@@ -28,6 +29,7 @@ __all__ = [
     "CATEGORY_LABELS",
     "CATEGORY_WEIGHTS",
     "HISTORY_SESSION_KEY",
+    "HISTORY_STORAGE_POLICY",
     "ProfileReadinessHistoryEntry",
     "ProfileReadinessInput",
     "ProfileReadinessResult",
