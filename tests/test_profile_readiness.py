@@ -308,6 +308,18 @@ class ProfileReadinessTests(unittest.TestCase):
         defaulted_entry = build_history_entry(result, trigger_reason=None)
         self.assertEqual(defaulted_entry.trigger_reason, "profile_recalculated")
 
+        combined_entry = build_history_entry(result, trigger_reason="resume_linkedin_update")
+        self.assertEqual(combined_entry.trigger_reason, "resume_linkedin_update")
+
+        for unsafe_trigger_reason in (
+            "candidate profile changed",
+            "contact_info",
+            "external_profile_url",
+        ):
+            with self.subTest(unsafe_trigger_reason=unsafe_trigger_reason):
+                unsafe_entry = build_history_entry(result, trigger_reason=unsafe_trigger_reason)
+                self.assertEqual(unsafe_entry.trigger_reason, "profile_recalculated")
+
         stored_payload = repr(session_state).lower()
         for forbidden in (
             "resume_text",

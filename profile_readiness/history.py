@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import MutableMapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-import re
 from typing import Any
 
 from .scoring import ProfileReadinessResult
@@ -13,20 +12,18 @@ HISTORY_SESSION_KEY = "profile_readiness_score_history"
 HISTORY_STORAGE_POLICY = "session"
 DEFAULT_TRIGGER_REASON = "profile_recalculated"
 
-_SAFE_TRIGGER_REASON = re.compile(r"^[a-z0-9_:-]{1,80}$")
-_PRIVATE_FIELD_MARKERS = (
-    "raw_resume",
-    "resume_text",
-    "raw_linkedin",
-    "linkedin_text",
-    "contact_information",
-    "contact_info",
-    "email",
-    "phone",
-    "external_profile_url",
-    "profile_url",
-    "mentor_notes",
-    "recruiter_notes",
+ALLOWED_TRIGGER_REASONS = frozenset(
+    {
+        DEFAULT_TRIGGER_REASON,
+        "initial_calculation",
+        "resume_update",
+        "linkedin_update",
+        "mentor_recruiter_review_update",
+        "resume_linkedin_update",
+        "resume_mentor_recruiter_review_update",
+        "linkedin_mentor_recruiter_review_update",
+        "resume_linkedin_mentor_recruiter_review_update",
+    }
 )
 
 
@@ -116,10 +113,6 @@ def _safe_trigger_reason(trigger_reason: str | None) -> str:
     if not isinstance(trigger_reason, str):
         return DEFAULT_TRIGGER_REASON
     normalized = trigger_reason.strip().lower()
-    if not normalized:
-        return DEFAULT_TRIGGER_REASON
-    if any(marker in normalized for marker in _PRIVATE_FIELD_MARKERS):
-        return DEFAULT_TRIGGER_REASON
-    if not _SAFE_TRIGGER_REASON.fullmatch(normalized):
+    if normalized not in ALLOWED_TRIGGER_REASONS:
         return DEFAULT_TRIGGER_REASON
     return normalized
