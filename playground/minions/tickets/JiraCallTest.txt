@@ -1,0 +1,20 @@
+Key: GURU-CALL
+Title: Validate assigned-ticket voice escalation
+Priority: High
+Assignee: unassigned
+RequiresHumanInput: true
+CallOnly: true
+HumanQuestion: Did this assigned minion ticket successfully call you through Vocal Bridge?
+HumanOptions: yes, no, stop
+
+Problem
+This ticket exists only to validate that the quarter watcher can trigger a Vocal Bridge phone call when an assigned minion ticket requires human input.
+
+Acceptance Criteria
+- When assigned to `minion`, the watcher places a Vocal Bridge call.
+- The run stops after the call test.
+- No repository product files are edited.
+
+Validation
+- Inspect the run log under `.runs/quarter/`.
+- Confirm the phone call was received.

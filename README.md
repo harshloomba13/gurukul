@@ -9,6 +9,8 @@ Optional 1:1 review with mentor/recruiter
 
 Score and track profile readiness
 
+Supporting spec: [Profile readiness documentation pack](docs/profile-readiness/README.md) for first-prototype scoring, signals, and acceptance criteria
+
 🛣️ 1. Personalized Roadmap Creation
 User defines target role (e.g., SDE, PM) and time frame (e.g., 30 days)
 
@@ -33,6 +35,10 @@ Assign tasks and sessions to specific days/hours
 Match internal mentor availability for booked 1:1 sessions
 
 Dynamic adjustments for missed or rescheduled tasks
+
+Missed solo tasks move to the next open prep slot within the user's availability, shifting later unscheduled work only when needed
+
+Missed or rescheduled mentor sessions keep mentor availability as the scheduling constraint: release the missed booking, show matching internal mentor availability, and require user confirmation before booking a new 1:1 session
 
 🧪 4. Mock Exams & Interviews
 DSA/technical mock tests with scoring, timing, and analytics
@@ -59,9 +65,10 @@ Run the local Streamlit prototype to explore:
 - auto-scheduled prep sessions
 - mock interview tracking
 - profile readiness scoring
+  - Inputs: resume ATS compliance, formatting, impact, LinkedIn profile feedback, and optional mentor/recruiter review notes
+  - Output: profile readiness score summarizing resume & LinkedIn profile strength before prep
+  - Output: tracked readiness changes highlighting priority gaps for users to address
 - salary negotiation support prompts
 
 Command:
 `streamlit run gurukul_quick_app.py`
-
-

@@ -1,0 +1,15 @@
+Key: GURU-102
+Title: Document missed-session adjustment behavior
+Priority: Medium
+Assignee: unassigned
+
+Problem
+The roadmap auto-scheduling requirements mention dynamic adjustments for missed or rescheduled tasks, but the expected behavior is underspecified.
+
+Acceptance Criteria
+- Update the root README with a short clarification under Auto-Schedule Sessions Within Timeline.
+- Include how missed tasks are moved and how mentor sessions should be handled.
+- Keep the change documentation-only.
+
+Validation
+- Review Markdown formatting and internal consistency.

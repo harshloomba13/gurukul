@@ -1,0 +1,6 @@
+.env.local
+.next/
+.runs/
+__pycache__/
+node_modules/
+tsconfig.tsbuildinfo

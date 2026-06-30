@@ -1,0 +1,52 @@
+Key: GURU-105
+Parent: GURU-104
+Title: Implement profile readiness scoring prototype
+Priority: High
+Assignee: minion
+
+Problem
+GURU-104 added the profile readiness scoring documentation pack, but the Streamlit prototype still keeps readiness scoring as a small inline helper in `gurukul_quick_app.py`. Build the first code implementation that follows the GURU-104 scoring model and exposes it in the quick prototype.
+
+Scope
+- Code changes are expected.
+- Use the GURU-104 docs under `docs/profile-readiness/` as the product specification.
+- Keep the implementation small and local to the prototype.
+- Do not add external dependencies, databases, API calls, background jobs, generated assets, or secrets.
+- Preserve the existing Streamlit prototype behavior for roadmap creation, resources, scheduling, mocks, and salary negotiation.
+
+Files To Change
+- Update `gurukul_quick_app.py` to use the new profile readiness code.
+- Create `profile_readiness/__init__.py`.
+- Create `profile_readiness/scoring.py`.
+- Create `profile_readiness/events.py`.
+- Create `profile_readiness/recommendations.py`.
+- Create `tests/test_profile_readiness.py`.
+
+Implementation Requirements
+- Replace the old inline `readiness_score(...)` helper with an imported profile readiness calculation.
+- Implement the weighted scoring model from `docs/profile-readiness/scoring-model.md`:
+  - Resume ATS compliance: 30%.
+  - Resume formatting: 15%.
+  - Resume impact: 25%.
+  - LinkedIn profile feedback: 20%.
+  - Mentor/recruiter review: 10%.
+- Return a structured result that includes numeric score, readiness band, category scores, weighted gaps, top gap category, and whether the score is provisional or human-reviewed.
+- Implement readiness bands exactly as documented: Not ready, Needs work, Approaching ready, Ready, Strong.
+- Implement recommendation generation that ranks the largest weighted readiness gap first and returns concise next actions.
+- Implement event-building helpers for profile readiness recalculation and recommendation interactions without including raw resume text, LinkedIn text, contact information, external profile URLs, or mentor/recruiter notes.
+- Update the Streamlit UI to show the profile readiness score, band, top gap, and recommendations in the Resume & LinkedIn Optimization section.
+- Keep the code deterministic and testable without Streamlit.
+
+Acceptance Criteria
+- The PR changes at least six files: `gurukul_quick_app.py`, the three profile readiness modules, package `__init__.py`, and tests.
+- Unit tests cover score calculation, readiness bands, provisional scoring, human-reviewed scoring, weighted gap ranking, recommendation ordering, and privacy-safe event payloads.
+- Existing prototype sections still render from the same sidebar inputs or equivalent profile-readiness inputs.
+- No raw private profile content is stored in event payloads.
+- No new package dependencies are added.
+- No unrelated dirty files are included in the publish manifest.
+
+Validation
+- Run `python3 -m py_compile gurukul_quick_app.py profile_readiness/*.py`.
+- Run `python3 -m unittest discover -s tests`.
+- Run `git diff --check -- gurukul_quick_app.py profile_readiness tests`.
+- Confirm the publish manifest lists only files that belong to GURU-105.

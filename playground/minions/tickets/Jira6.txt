@@ -1,0 +1,63 @@
+Key: GURU-106
+Parent: GURU-105
+Title: Add profile readiness score history with human-selected storage
+Priority: High
+Assignee: minion
+
+Problem
+GURU-105 implemented profile readiness scoring, recommendations, and privacy-safe events, but the prototype does not preserve score history across recalculations. Add score history so users can see how profile readiness changes after resume, LinkedIn, and mentor/recruiter review updates.
+
+Blocking Human Decision
+Before implementation, the minion must use Vocal Bridge escalation to call the user and ask which score-history storage policy is acceptable for the prototype.
+
+Do not infer this decision independently. The storage choice changes privacy behavior, local file writes, review complexity, and prototype scope.
+
+Voice Question
+I'm adding profile readiness score history. Which storage policy should I implement for the prototype?
+
+Allowed Voice Answers
+- `session`: store score history only in Streamlit session state. Lowest risk, resets when the app restarts.
+- `json`: store score history in a local JSON file ignored by git. Persists locally, but writes profile metadata to disk.
+- `sqlite`: store score history in SQLite using the Python standard library. More realistic, but larger scope.
+- `stop`: do not implement until the storage policy is decided later.
+
+Safe Fallback
+If the answer is missing, ambiguous, or not one of the allowed options, stop before changing product code and mark the ticket blocked.
+
+Scope After Human Decision
+- Code changes are expected after the storage option is chosen.
+- Do not add external dependencies, network calls, background jobs, generated assets, or secrets.
+- Do not store raw resume text, raw LinkedIn text, contact information, external profile URLs, mentor/recruiter notes, or recruiter notes.
+- Do not commit runtime score-history data files.
+- Preserve the existing profile readiness scoring behavior from GURU-105.
+
+Files To Change
+- Update `gurukul_quick_app.py`.
+- Update or extend `profile_readiness/scoring.py` only if needed.
+- Create `profile_readiness/history.py`.
+- Update `profile_readiness/events.py` if history events are needed.
+- Update `profile_readiness/__init__.py`.
+- Add or update tests under `tests/`.
+- If the user chooses `json`, update `.gitignore` for the local runtime JSON history file.
+
+Implementation Requirements
+- Add a score history model that records score, readiness band, top gap category, provisional flag, human-reviewed flag, trigger reason, and timestamp.
+- Add a function that appends a new history entry from a `ProfileReadinessResult`.
+- Add a function that returns recent history entries in newest-last order.
+- Add a score delta helper comparing the latest score to the previous scored history entry.
+- Update the Streamlit UI to show recent profile readiness history and score delta in the Resume & LinkedIn Optimization section.
+- Add tests for the selected storage policy, score delta behavior, privacy-safe history entries, and no raw private profile content in stored payloads.
+
+Acceptance Criteria
+- The first visible action in the GURU-106 run is a Vocal Bridge escalation call asking the storage question.
+- The implementation follows the user's selected option exactly.
+- If the user answers `stop` or gives an unclear answer, no product code is changed and the ticket is blocked.
+- The PR includes code and tests, not documentation-only changes.
+- The publish manifest includes only files that belong to GURU-106.
+- Runtime history data files are not committed.
+
+Validation
+- Run `python3 -m py_compile gurukul_quick_app.py profile_readiness/*.py`.
+- Run `python3 -m unittest discover -s tests`.
+- Run `git diff --check -- gurukul_quick_app.py profile_readiness tests .gitignore`.
+- Confirm no raw private profile content appears in history payloads or tests.

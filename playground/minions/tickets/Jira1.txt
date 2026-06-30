@@ -1,0 +1,17 @@
+Key: GURU-101
+Title: Add profile readiness scoring copy to the prototype README
+Priority: Medium
+Assignee: unassigned
+
+Problem
+The root README lists profile readiness scoring, but the quick prototype section does not explain how that score should be interpreted by users.
+
+Acceptance Criteria
+- Update documentation only.
+- Preserve the existing Gurukul product terminology.
+- Add 2-4 concise bullets explaining profile readiness score inputs and outputs.
+- Do not rewrite unrelated requirement sections.
+
+Validation
+- Review Markdown formatting.
+- Confirm the README still reads as a functional requirements summary.
