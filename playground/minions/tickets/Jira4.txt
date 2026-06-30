@@ -1,0 +1,35 @@
+Key: GURU-104
+Title: Build profile readiness scoring documentation pack
+Priority: Medium
+Assignee: minion
+
+Problem
+The root README names Profile & Application Readiness as a product area, but the first prototype does not yet have a structured scoring spec that explains how readiness is calculated, what signals drive it, and what behaviors should be accepted.
+
+Scope
+- Documentation only.
+- Keep the root README as the source of truth for product scope.
+- Create a small supporting documentation pack under `docs/profile-readiness/`.
+- Do not add application code, dependencies, build tools, or generated assets.
+
+Files To Change
+- Update `README.md` with a concise reference under the existing Profile & Application Readiness area and point to the supporting docs.
+- Create `docs/profile-readiness/README.md`.
+- Create `docs/profile-readiness/scoring-model.md`.
+- Create `docs/profile-readiness/signals-and-events.md`.
+- Create `docs/profile-readiness/acceptance-criteria.md`.
+
+Acceptance Criteria
+- The PR changes at least five files: the root README plus the four new docs listed above.
+- The root README preserves existing Gurukul terminology and stays concise.
+- `docs/profile-readiness/README.md` explains the user problem, first prototype scope, and out-of-scope items.
+- `docs/profile-readiness/scoring-model.md` defines scoring categories, inputs, weights, readiness bands, and edge cases.
+- `docs/profile-readiness/signals-and-events.md` defines tracking events for profile completion, readiness recalculation, and recommendation interactions.
+- `docs/profile-readiness/acceptance-criteria.md` includes at least eight user-facing scenarios covering profile import, missing data, score changes, recommendations, and privacy expectations.
+- The new docs support the README; they do not contradict or replace it.
+
+Validation
+- Review Markdown heading levels, links, and internal consistency.
+- Run `git diff --check -- README.md docs/profile-readiness`.
+- Confirm `find docs/profile-readiness -maxdepth 1 -type f | sort` lists the four new docs.
+- Confirm no secrets, API keys, or local machine paths are added.

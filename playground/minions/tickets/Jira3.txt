@@ -1,0 +1,15 @@
+Key: GURU-103
+Title: Add salary negotiation support acceptance notes
+Priority: Low
+Assignee: unassigned
+
+Problem
+The salary negotiation support area lists core features but does not state what a successful first prototype should demonstrate.
+
+Acceptance Criteria
+- Update only documentation.
+- Add a compact acceptance note under Salary Negotiation Support.
+- Mention offer analysis, script generation, and mentor consultation without adding new feature areas.
+
+Validation
+- Review Markdown formatting and ensure product terminology remains consistent.
