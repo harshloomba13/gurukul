@@ -14,3 +14,25 @@ services:
     buildCommand: "pip install -r requirements.txt"
     startCommand: "streamlit run ui/app.py --server.port 8001"
     autoDeploy: true
+
+  - type: web
+    name: gurukul-personal-secretary-harsh
+    runtime: docker
+    plan: free
+    dockerfilePath: ./personal-secretary/Dockerfile
+    dockerContext: ./personal-secretary
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: SECRETARY_API_KEY
+        generateValue: true
+      - key: SECRETARY_SIGNING_KEY
+        generateValue: true
+      - key: SECRETARY_PHONE
+        sync: false
+      - key: SECRETARY_FIRST_NAME
+        sync: false
+      - key: SECRETARY_LAST_NAME
+        sync: false
+      - key: SECRETARY_EMAIL
+        sync: false
