@@ -1,0 +1,18 @@
+{
+  "name": "gurukul-personal-secretary",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Secure browser automation API for the Gurukul Personal Secretary custom GPT.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "playwright": "^1.55.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
