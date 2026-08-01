@@ -1,0 +1,198 @@
+openapi: 3.1.0
+info:
+  title: Gurukul Personal Secretary
+  version: 1.0.0
+  description: >-
+    Private appointment-booking action for Harsh. It supports only the approved
+    Del Ray Barbershop workflow: Buzzcut and Beard Trim with Scotty, preferring
+    Thursday then Friday, at or after 2:00 PM Vancouver time.
+servers:
+  - url: https://gurukul-personal-secretary-harsh.onrender.com
+paths:
+  /health:
+    get:
+      operationId: checkSecretaryHealth
+      summary: Check whether the secretary service is running and configured.
+      x-openai-isConsequential: false
+      security: []
+      responses:
+        '200':
+          description: Health status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  configured:
+                    type: boolean
+                  service:
+                    type: string
+  /v1/availability:
+    post:
+      operationId: findUsualHaircutAvailability
+      summary: Find the earliest approved live appointment.
+      description: >-
+        Searches Del Ray Barbershop for Buzzcut and Beard Trim with Scotty.
+        Thursday is preferred over Friday within each searched week, and only
+        times at or after 2:00 PM America/Vancouver are eligible.
+      x-openai-isConsequential: false
+      security:
+        - SecretaryApiKey: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                max_weeks:
+                  type: integer
+                  minimum: 1
+                  maximum: 12
+                  default: 12
+                  description: Maximum number of upcoming weeks to search.
+      responses:
+        '200':
+          description: A live appointment quote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityQuote'
+        '404':
+          description: No matching availability was found.
+        '401':
+          description: Invalid API key.
+  /v1/book:
+    post:
+      operationId: bookUsualHaircut
+      summary: Book the exact appointment contained in a live quote.
+      description: >-
+        This creates an external appointment. Call only with the unmodified
+        quote token returned by findUsualHaircutAvailability and only after the
+        user has approved that exact date and time. No payment is charged.
+      x-openai-isConsequential: true
+      security:
+        - SecretaryApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - quote_token
+                - confirm
+              properties:
+                quote_token:
+                  type: string
+                  description: Unmodified short-lived quote token from availability.
+                confirm:
+                  type: boolean
+                  enum: [true]
+                  description: Must be true after user confirmation.
+      responses:
+        '200':
+          description: Confirmed appointment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingConfirmation'
+        '409':
+          description: The quoted slot is no longer available.
+        '400':
+          description: Confirmation or quote validation failed.
+        '401':
+          description: Invalid API key.
+components:
+  securitySchemes:
+    SecretaryApiKey:
+      type: apiKey
+      in: header
+      name: X-Secretary-Key
+  schemas:
+    Slot:
+      type: object
+      required:
+        - dateLabel
+        - timeLabel
+        - business
+        - service
+        - staff
+        - location
+        - estimatedPriceCad
+        - dueTodayCad
+      properties:
+        dateLabel:
+          type: string
+          examples: ['Friday, Aug 7, 2026']
+        timeLabel:
+          type: string
+          examples: ['2:40 p.m.']
+        business:
+          type: string
+          const: Del Ray Barbershop
+        service:
+          type: string
+          const: Buzzcut and Beard Trim
+        staff:
+          type: string
+          const: Scotty
+        location:
+          type: string
+        estimatedPriceCad:
+          type: number
+        dueTodayCad:
+          type: number
+          const: 0
+    AvailabilityQuote:
+      type: object
+      required:
+        - slot
+        - quote_token
+        - quote_expires_at
+        - requires_confirmation
+      properties:
+        slot:
+          $ref: '#/components/schemas/Slot'
+        quote_token:
+          type: string
+        quote_expires_at:
+          type: string
+          format: date-time
+        requires_confirmation:
+          type: boolean
+          const: true
+    BookingConfirmation:
+      type: object
+      required:
+        - confirmed
+        - business
+        - service
+        - staff
+        - date
+        - time
+        - location
+      properties:
+        confirmed:
+          type: boolean
+          const: true
+        idempotent_replay:
+          type: boolean
+        business:
+          type: string
+        service:
+          type: string
+        staff:
+          type: string
+        date:
+          type: string
+        time:
+          type: string
+        location:
+          type: string
+        estimatedDueAtAppointmentCad:
+          type: number
