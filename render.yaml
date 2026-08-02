@@ -36,3 +36,25 @@ services:
         sync: false
       - key: SECRETARY_EMAIL
         sync: false
+
+  - type: web
+    name: gurukul-executor
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./executor/Dockerfile
+    dockerContext: ./executor
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    disk:
+      name: executor-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: EXECUTOR_API_KEY
+        generateValue: true
+      - key: QUOTE_SIGNING_KEY
+        generateValue: true
+      - key: SESSION_ENCRYPTION_KEY
+        generateValue: true
+      - key: WODIFY_STORE_URL
+        sync: false
