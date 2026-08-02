@@ -10,6 +10,15 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '32kb' }));
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+  const requestId = crypto.randomUUID().slice(0, 8);
+  console.log(`[${requestId}] ${req.method} ${req.path} started`);
+  res.on('finish', () => {
+    console.log(`[${requestId}] ${req.method} ${req.path} ${res.statusCode} in ${Date.now() - startedAt}ms`);
+  });
+  next();
+});
 
 let config;
 let configurationError;
@@ -94,8 +103,9 @@ app.get('/openapi.yaml', (req, res) => {
 
 app.post('/v1/availability', requireConfigured, authenticate, async (req, res) => {
   try {
-    const requestedWeeks = Number(req.body?.max_weeks || config.maxWeeks);
+    const requestedWeeks = Number(req.body?.max_weeks || config.defaultSearchWeeks);
     const maxWeeks = Math.min(Math.max(Math.trunc(requestedWeeks), 1), config.maxWeeks);
+    console.log(`Availability search requested for ${maxWeeks} week(s)`);
     const slot = await getAvailability(config, maxWeeks);
     if (!slot) {
       return res.status(404).json({
@@ -119,7 +129,7 @@ app.post('/v1/availability', requireConfigured, authenticate, async (req, res) =
       requires_confirmation: true,
     });
   } catch (error) {
-    console.error(`Availability failed: ${error.message}`);
+    console.error(`Availability failed: ${error.stack || error.message}`);
     res.status(502).json({ error: 'availability_failed', message: error.message });
   }
 });
@@ -178,7 +188,7 @@ app.post('/v1/book', requireConfigured, authenticate, async (req, res) => {
     res.json({ idempotent_replay: false, ...result });
   } catch (error) {
     const status = error.code === 'SLOT_UNAVAILABLE' ? 409 : 502;
-    console.error(`Booking failed: ${error.message}`);
+    console.error(`Booking failed: ${error.stack || error.message}`);
     res.status(status).json({
       error: error.code === 'SLOT_UNAVAILABLE' ? 'slot_unavailable' : 'booking_failed',
       message: error.message,
