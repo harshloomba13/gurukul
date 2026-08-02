@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Gurukul Personal Secretary
-  version: 1.0.0
+  version: 1.0.1
   description: >-
     Private appointment-booking action for Harsh. It supports only the approved
     Del Ray Barbershop workflow: Buzzcut and Beard Trim with Scotty, preferring
@@ -36,7 +36,8 @@ paths:
       description: >-
         Searches Del Ray Barbershop for Buzzcut and Beard Trim with Scotty.
         Thursday is preferred over Friday within each searched week, and only
-        times at or after 2:00 PM America/Vancouver are eligible.
+        times at or after 2:00 PM America/Vancouver are eligible. The search is
+        limited to the next two weeks so it completes within the Action timeout.
       x-openai-isConsequential: false
       security:
         - SecretaryApiKey: []
@@ -51,9 +52,9 @@ paths:
                 max_weeks:
                   type: integer
                   minimum: 1
-                  maximum: 12
-                  default: 12
-                  description: Maximum number of upcoming weeks to search.
+                  maximum: 2
+                  default: 2
+                  description: Search one or two upcoming weeks.
       responses:
         '200':
           description: A live appointment quote.
