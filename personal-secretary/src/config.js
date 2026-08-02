@@ -10,10 +10,10 @@ const DEFAULTS = Object.freeze({
   timezone: 'America/Vancouver',
   notBeforeMinutes: 14 * 60,
   weekdayOrder: ['Th', 'Fr'],
-  // Keep the default Action call fast enough for ChatGPT. Callers may request
-  // a wider search explicitly, up to this hard ceiling.
+  // ChatGPT Actions must return before the platform request timeout. Restrict
+  // both default and explicit requests to the immediate two-week window.
   defaultSearchWeeks: 2,
-  maxWeeks: 12,
+  maxWeeks: 2,
   quoteTtlSeconds: 10 * 60,
 });
 
