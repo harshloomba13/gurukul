@@ -5,7 +5,11 @@ function encode(value) {
 }
 
 function decode(value) {
-  return JSON.parse(Buffer.from(value, 'base64url').toString('utf8'));
+  try {
+    return JSON.parse(Buffer.from(value, 'base64url').toString('utf8'));
+  } catch {
+    throw new Error('Invalid quote payload');
+  }
 }
 
 function signQuote(payload, signingKey) {
@@ -15,7 +19,9 @@ function signQuote(payload, signingKey) {
 }
 
 function verifyQuote(token, signingKey, nowSeconds = Math.floor(Date.now() / 1000)) {
-  const [body, suppliedSignature] = String(token || '').split('.');
+  const parts = String(token || '').split('.');
+  if (parts.length !== 2) throw new Error('Invalid quote token');
+  const [body, suppliedSignature] = parts;
   if (!body || !suppliedSignature) throw new Error('Invalid quote token');
 
   const expectedSignature = crypto.createHmac('sha256', signingKey).update(body).digest('base64url');
@@ -26,7 +32,12 @@ function verifyQuote(token, signingKey, nowSeconds = Math.floor(Date.now() / 100
   }
 
   const payload = decode(body);
-  if (!payload.expires_at || payload.expires_at < nowSeconds) throw new Error('Quote expired');
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Invalid quote payload');
+  }
+  if (!Number.isFinite(payload.expires_at) || payload.expires_at < nowSeconds) {
+    throw new Error('Quote expired');
+  }
   return payload;
 }
 

@@ -1,11 +1,12 @@
 openapi: 3.1.0
 info:
   title: Gurukul Personal Secretary
-  version: 1.0.1
+  version: 1.1.0
   description: >-
-    Private appointment-booking action for Harsh. It supports only the approved
-    Del Ray Barbershop workflow: Buzzcut and Beard Trim with Scotty, preferring
-    Thursday then Friday, at or after 2:00 PM Vancouver time.
+    Private quote-and-confirm action platform for Harsh. It preserves the Del
+    Ray Barbershop haircut workflow and adds a sandbox bakery delivery workflow.
+    Every consequential action requires an unchanged short-lived signed quote
+    token and explicit confirmation.
 servers:
   - url: https://gurukul-personal-secretary-harsh.onrender.com
 paths:
@@ -29,10 +30,14 @@ paths:
                     type: boolean
                   service:
                     type: string
+                  workflows:
+                    type: array
+                    items:
+                      type: string
   /v1/availability:
     post:
       operationId: findUsualHaircutAvailability
-      summary: Find the earliest approved live appointment.
+      summary: Find the earliest approved live haircut appointment.
       description: >-
         Searches Del Ray Barbershop for Buzzcut and Beard Trim with Scotty.
         Thursday is preferred over Friday within each searched week, and only
@@ -69,7 +74,7 @@ paths:
   /v1/book:
     post:
       operationId: bookUsualHaircut
-      summary: Book the exact appointment contained in a live quote.
+      summary: Book the exact haircut appointment contained in a live quote.
       description: >-
         This creates an external appointment. Call only with the unmodified
         quote token returned by findUsualHaircutAvailability and only after the
@@ -82,19 +87,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties: false
-              required:
-                - quote_token
-                - confirm
-              properties:
-                quote_token:
-                  type: string
-                  description: Unmodified short-lived quote token from availability.
-                confirm:
-                  type: boolean
-                  enum: [true]
-                  description: Must be true after user confirmation.
+              $ref: '#/components/schemas/ConfirmQuoteRequest'
       responses:
         '200':
           description: Confirmed appointment.
@@ -108,6 +101,66 @@ paths:
           description: Confirmation or quote validation failed.
         '401':
           description: Invalid API key.
+  /v1/bakery/delivery-quote:
+    post:
+      operationId: getBakeryDeliveryQuote
+      summary: Get a sandbox bakery delivery quote.
+      description: >-
+        Creates a proposal using only configured merchant, product, delivery,
+        quantity, tip, tax, and spending constraints. This endpoint uses a fake
+        provider and cannot place a real order or charge payment.
+      x-openai-isConsequential: false
+      security:
+        - SecretaryApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BakeryDeliveryQuoteRequest'
+      responses:
+        '200':
+          description: Sandbox bakery delivery quote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BakeryDeliveryQuote'
+        '400':
+          description: Request validation failed.
+        '401':
+          description: Invalid API key.
+        '502':
+          description: Bakery quote provider failed.
+  /v1/bakery/order:
+    post:
+      operationId: placeBakeryDeliveryOrder
+      summary: Confirm the exact sandbox bakery quote.
+      description: >-
+        Executes only the unmodified quote returned by getBakeryDeliveryQuote
+        and only with explicit confirmation. This is sandbox-only in the current
+        implementation and cannot place a real bakery order.
+      x-openai-isConsequential: true
+      security:
+        - SecretaryApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmQuoteRequest'
+      responses:
+        '200':
+          description: Sandbox bakery order result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BakeryOrderResult'
+        '400':
+          description: Confirmation or quote validation failed.
+        '401':
+          description: Invalid API key.
+        '502':
+          description: Sandbox bakery provider failed.
 components:
   securitySchemes:
     SecretaryApiKey:
@@ -115,6 +168,20 @@ components:
       in: header
       name: X-Secretary-Key
   schemas:
+    ConfirmQuoteRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - quote_token
+        - confirm
+      properties:
+        quote_token:
+          type: string
+          description: Unmodified short-lived quote token from the matching quote endpoint.
+        confirm:
+          type: boolean
+          enum: [true]
+          description: Must be true after user confirmation.
     Slot:
       type: object
       required:
@@ -197,3 +264,206 @@ components:
           type: string
         estimatedDueAtAppointmentCad:
           type: number
+    BakeryDeliveryQuoteRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - products
+        - delivery_destination_ref
+      properties:
+        merchant_id:
+          type: string
+          const: sandbox-bakery
+          default: sandbox-bakery
+        products:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/BakeryProductRequest'
+        delivery_destination_ref:
+          type: string
+          enum: [home, office]
+          description: Configured destination reference only. Do not send raw addresses.
+        delivery_window:
+          type: string
+          enum: [asap, today_4_6_pm, tomorrow_9_11_am]
+          default: asap
+        tip_cad:
+          type: number
+          minimum: 0
+          maximum: 10
+          default: 0
+    BakeryProductRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - sku
+        - quantity
+      properties:
+        sku:
+          type: string
+          enum:
+            - sourdough-loaf
+            - croissant-box-6
+            - cinnamon-roll-box-4
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 4
+    BakeryDeliveryQuote:
+      type: object
+      required:
+        - workflow
+        - proposal
+        - quote_token
+        - quote_expires_at
+        - requires_confirmation
+      properties:
+        workflow:
+          type: string
+          const: bakery_delivery
+        proposal:
+          $ref: '#/components/schemas/BakeryProposal'
+        quote_token:
+          type: string
+        quote_expires_at:
+          type: string
+          format: date-time
+        requires_confirmation:
+          type: boolean
+          const: true
+    BakeryProposal:
+      type: object
+      required:
+        - workflow
+        - provider
+        - live_order
+        - merchant
+        - products
+        - delivery_destination_ref
+        - delivery_window
+        - fees
+        - subtotal_cad
+        - tax_cad
+        - tip_cad
+        - total_estimated_cad
+        - currency
+      properties:
+        workflow:
+          type: string
+          const: bakery_delivery
+        provider:
+          type: string
+          const: fake_bakery
+        live_order:
+          type: boolean
+          const: false
+        merchant:
+          type: object
+          required: [id, name]
+          properties:
+            id:
+              type: string
+              const: sandbox-bakery
+            name:
+              type: string
+              const: Sandbox Bakery
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/BakeryQuotedProduct'
+        delivery_destination_ref:
+          type: string
+          enum: [home, office]
+        delivery_window:
+          $ref: '#/components/schemas/BakeryDeliveryWindow'
+        fees:
+          type: object
+          required: [delivery_cad]
+          properties:
+            delivery_cad:
+              type: number
+        subtotal_cad:
+          type: number
+        tax_cad:
+          type: number
+        tip_cad:
+          type: number
+        total_estimated_cad:
+          type: number
+        currency:
+          type: string
+          const: CAD
+    BakeryQuotedProduct:
+      type: object
+      required:
+        - sku
+        - name
+        - quantity
+        - unit_price_cad
+        - line_total_cad
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        quantity:
+          type: integer
+        unit_price_cad:
+          type: number
+        line_total_cad:
+          type: number
+    BakeryDeliveryWindow:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+    BakeryOrderResult:
+      type: object
+      required:
+        - workflow
+        - order_id
+        - status
+        - live_order
+        - merchant
+        - products
+        - delivery_destination_ref
+        - delivery_window
+        - total_cad
+        - currency
+      properties:
+        idempotent_replay:
+          type: boolean
+        workflow:
+          type: string
+          const: bakery_delivery
+        order_id:
+          type: string
+        status:
+          type: string
+          const: accepted_sandbox
+        live_order:
+          type: boolean
+          const: false
+        merchant:
+          type: object
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/BakeryQuotedProduct'
+        delivery_destination_ref:
+          type: string
+        delivery_window:
+          $ref: '#/components/schemas/BakeryDeliveryWindow'
+        total_cad:
+          type: number
+        currency:
+          type: string
+          const: CAD
+        provider_reference:
+          type: string
+          const: fake_bakery

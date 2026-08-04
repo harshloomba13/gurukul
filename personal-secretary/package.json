@@ -1,10 +1,11 @@
 {
   "name": "gurukul-personal-secretary",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Secure browser automation API for the Gurukul Personal Secretary custom GPT.",
+  "description": "Secure quote-and-confirm action API for the Gurukul Personal Secretary custom GPT.",
   "type": "commonjs",
   "scripts": {
+    "lint": "node --check src/*.js src/*/*.js test/*.js",
     "start": "node src/server.js",
     "test": "node --test test/*.test.js"
   },

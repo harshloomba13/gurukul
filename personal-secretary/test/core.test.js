@@ -27,6 +27,8 @@ test('signs, verifies, and expires booking quotes', () => {
   assert.equal(verifyQuote(token, 'secret', 100).slot.dateLabel, 'Friday, Aug 7, 2026');
   assert.throws(() => verifyQuote(token, 'wrong', 100), /signature/);
   assert.throws(() => verifyQuote(token, 'secret', 201), /expired/);
+  assert.throws(() => verifyQuote(`${token}.extra`, 'secret', 100), /Invalid quote token/);
+  assert.throws(() => verifyQuote('not-json.signature', 'secret', 100), /signature|payload/);
 });
 
 test('compares API keys safely', () => {

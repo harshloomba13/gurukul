@@ -15,6 +15,47 @@ const DEFAULTS = Object.freeze({
   defaultSearchWeeks: 2,
   maxWeeks: 2,
   quoteTtlSeconds: 10 * 60,
+  bakery: {
+    merchant: {
+      id: 'sandbox-bakery',
+      name: 'Sandbox Bakery',
+    },
+    products: [
+      {
+        sku: 'sourdough-loaf',
+        name: 'Country Sourdough Loaf',
+        unitPriceCad: 8.5,
+        maxQuantity: 4,
+      },
+      {
+        sku: 'croissant-box-6',
+        name: 'Butter Croissant Box',
+        unitPriceCad: 21,
+        maxQuantity: 2,
+      },
+      {
+        sku: 'cinnamon-roll-box-4',
+        name: 'Cinnamon Roll Box',
+        unitPriceCad: 18,
+        maxQuantity: 3,
+      },
+    ],
+    deliveryDestinationRefs: ['home', 'office'],
+    deliveryWindows: [
+      { id: 'asap', label: 'Next available sandbox delivery window' },
+      { id: 'today_4_6_pm', label: 'Today, 4:00 PM-6:00 PM' },
+      { id: 'tomorrow_9_11_am', label: 'Tomorrow, 9:00 AM-11:00 AM' },
+    ],
+    defaultDeliveryWindow: 'asap',
+    deliveryFeeCad: 6.5,
+    taxRate: 0.05,
+    maxTotalQuantity: 6,
+    spendingLimitCad: 75,
+    tip: {
+      enabled: true,
+      maxCad: 10,
+    },
+  },
 });
 
 function requireEnv(name) {
