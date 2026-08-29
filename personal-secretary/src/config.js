@@ -15,6 +15,28 @@ const DEFAULTS = Object.freeze({
   defaultSearchWeeks: 2,
   maxWeeks: 2,
   quoteTtlSeconds: 10 * 60,
+  flowers: {
+    merchant: {
+      id: 'vj-plant-shop',
+      name: 'V&J Plant Shop',
+      location: '1689 Johnston St #116, Vancouver, BC',
+    },
+    product: {
+      id: 8890663731456,
+      title: 'Classic Floral Subscription',
+      variantId: 46146231533824,
+      variantTitle: '3 Months',
+      sellingPlanId: 4019519744,
+      sellingPlanName: 'Monthly (3 Month)',
+      productJsonUrl: 'https://vjplantshop.com/products/classic-floral-subscription.js',
+      checkoutUrl: 'https://vjplantshop.com/products/classic-floral-subscription',
+    },
+    deliveryDestinationRefs: ['wife_home'],
+    defaultDeliveryDestinationRef: 'wife_home',
+    cadence: 'monthly',
+    commitmentDeliveries: 3,
+    spendingLimitCad: 80,
+  },
   bakery: {
     merchant: {
       id: 'sandbox-bakery',

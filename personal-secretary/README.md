@@ -42,6 +42,25 @@ Bakery endpoints:
 - `POST /v1/bakery/delivery-quote`
 - `POST /v1/bakery/order`
 
+### Monthly flower subscription checkout
+
+The flower workflow checks the live public catalog and prepares a user-reviewed checkout handoff. It does not collect a raw delivery address or payment data, place an order, create a subscription, or charge payment.
+
+- Merchant: V&J Plant Shop, Vancouver
+- Product: Classic Floral Subscription
+- Variant: 3 Months
+- Cadence: Monthly (three deliveries)
+- Destination: configured `wife_home` reference only
+- Budget: CAD 80 maximum per delivery; no add-ons or upgrades
+- Current catalog price at implementation: CAD 71.99 per delivery
+
+Flower endpoints:
+
+- `POST /v1/flowers/subscription-quote`
+- `POST /v1/flowers/prepare-checkout`
+
+The prepare-checkout result is intentionally `checkout_required` with `live_order: false`. A completed checkout on the florist's site is the only valid evidence that an order and recurring subscription exist.
+
 The generic workflow endpoints are also available for registered workflows:
 
 - `POST /v1/workflows/{workflowId}/quote`
@@ -57,6 +76,8 @@ The generic workflow endpoints are also available for registered workflows:
 6. The API returns a normalized result without exposing internal tokens or secrets.
 
 For haircut booking, execution opens a fresh browser session, rechecks the exact slot, verifies the checkout, fills contact details from Render secrets, and submits only when Square still shows CAD $0 due today.
+
+For flowers, execution fetches the florist catalog again and rejects any changed availability, product, cadence, commitment, price, or budget terms before returning the official checkout handoff.
 
 ## Security
 

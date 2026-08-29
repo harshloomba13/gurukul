@@ -8,6 +8,8 @@ const { WorkflowEngine, WorkflowError, tokenFingerprint } = require('./workflows
 const { createHaircutWorkflow } = require('./workflows/haircut');
 const { FakeBakeryProvider } = require('./bakery/fake-provider');
 const { createBakeryWorkflow } = require('./bakery/workflow');
+const { VjFlowerSubscriptionProvider } = require('./flowers/provider');
+const { createFlowerSubscriptionWorkflow } = require('./flowers/workflow');
 
 function createWorkflowEngine(config, audit = new ConsoleAuditLogger()) {
   return new WorkflowEngine({
@@ -16,6 +18,10 @@ function createWorkflowEngine(config, audit = new ConsoleAuditLogger()) {
       createBakeryWorkflow({
         config: config.bakery,
         provider: new FakeBakeryProvider(),
+      }),
+      createFlowerSubscriptionWorkflow({
+        config: config.flowers,
+        provider: new VjFlowerSubscriptionProvider(),
       }),
     ],
     signingKey: config.signingKey,
@@ -106,7 +112,7 @@ function createApp(options = {}) {
       status: 'ok',
       configured: Boolean(config),
       service: 'gurukul-personal-secretary',
-      workflows: config ? ['haircut', 'bakery_delivery'] : [],
+      workflows: config ? ['haircut', 'bakery_delivery', 'flower_subscription'] : [],
     });
   });
 
@@ -116,9 +122,10 @@ function createApp(options = {}) {
       '',
       'This private service uses contact details stored as deployment secrets only to complete user-requested appointments.',
       'Contact details are not returned by the API, written to the repository, or included in application logs.',
-      'The service supports approved quote-and-confirm workflows for the Del Ray Barbershop haircut and sandbox bakery delivery.',
+      'The service supports approved quote-and-confirm workflows for the Del Ray Barbershop haircut, sandbox bakery delivery, and V&J monthly floral subscription checkout.',
       'Appointment confirmations are returned without Square cancellation or rescheduling tokens.',
       'Bakery delivery uses a deterministic fake provider in this version and cannot place a real order or charge payment.',
+      'The flower workflow checks the florist public catalog and returns a checkout handoff. It does not collect addresses, payment data, place an order, or create a subscription.',
     ].join('\n'));
   });
 
@@ -172,6 +179,25 @@ function createApp(options = {}) {
       }));
     } catch (error) {
       return sendWorkflowError(res, error, 'bakery_order_failed');
+    }
+  });
+
+  app.post('/v1/flowers/subscription-quote', requireConfigured, authenticate, async (req, res) => {
+    try {
+      res.json(await engine.createQuote('flower_subscription', req.body || {}));
+    } catch (error) {
+      return sendWorkflowError(res, error, 'flower_quote_failed');
+    }
+  });
+
+  app.post('/v1/flowers/prepare-checkout', requireConfigured, authenticate, async (req, res) => {
+    try {
+      res.json(await engine.execute('flower_subscription', {
+        quote_token: req.body?.quote_token,
+        confirm: req.body?.confirm,
+      }));
+    } catch (error) {
+      return sendWorkflowError(res, error, 'flower_checkout_failed');
     }
   });
 

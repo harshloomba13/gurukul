@@ -1,12 +1,13 @@
 openapi: 3.1.0
 info:
   title: Gurukul Personal Secretary
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     Private quote-and-confirm action platform for Harsh. It preserves the Del
-    Ray Barbershop haircut workflow and adds a sandbox bakery delivery workflow.
-    Every consequential action requires an unchanged short-lived signed quote
-    token and explicit confirmation.
+    Ray Barbershop haircut workflow, a sandbox bakery delivery workflow, and a
+    budget-capped monthly floral subscription checkout handoff. Every
+    consequential action requires an unchanged short-lived signed quote token
+    and explicit confirmation.
 servers:
   - url: https://gurukul-personal-secretary-harsh.onrender.com
 paths:
@@ -161,6 +162,72 @@ paths:
           description: Invalid API key.
         '502':
           description: Sandbox bakery provider failed.
+  /v1/flowers/subscription-quote:
+    post:
+      operationId: getMonthlyFlowerSubscriptionQuote
+      summary: Quote the approved monthly floral subscription.
+      description: >-
+        Checks the V&J public catalog for the Classic Floral Subscription,
+        three-month variant, and monthly selling plan. The price must remain at
+        or below CAD 80 per delivery. No address, payment data, order, or
+        subscription is created by this operation.
+      x-openai-isConsequential: false
+      security:
+        - SecretaryApiKey: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowerSubscriptionQuoteRequest'
+      responses:
+        '200':
+          description: Live florist catalog quote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowerSubscriptionQuote'
+        '400':
+          description: Request validation failed.
+        '409':
+          description: The configured plan is unavailable or over budget.
+        '401':
+          description: Invalid API key.
+        '502':
+          description: Florist catalog lookup failed.
+  /v1/flowers/prepare-checkout:
+    post:
+      operationId: prepareMonthlyFlowerSubscriptionCheckout
+      summary: Recheck and return the approved florist checkout handoff.
+      description: >-
+        Rechecks the exact signed quote and returns the official product page
+        plus the pinned checkout selections. It does not place an order, start
+        a subscription, transmit a delivery address, or charge payment. The
+        user must review and complete checkout with the florist.
+      x-openai-isConsequential: true
+      security:
+        - SecretaryApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmQuoteRequest'
+      responses:
+        '200':
+          description: Verified checkout handoff.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowerCheckoutResult'
+        '400':
+          description: Confirmation or quote validation failed.
+        '409':
+          description: Florist availability, price, or terms changed.
+        '401':
+          description: Invalid API key.
+        '502':
+          description: Florist catalog recheck failed.
 components:
   securitySchemes:
     SecretaryApiKey:
@@ -467,3 +534,183 @@ components:
         provider_reference:
           type: string
           const: fake_bakery
+    FlowerSubscriptionQuoteRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        delivery_destination_ref:
+          type: string
+          enum: [wife_home]
+          default: wife_home
+          description: Configured destination reference only. Never send a raw address.
+    FlowerSubscriptionQuote:
+      type: object
+      required:
+        - workflow
+        - proposal
+        - quote_token
+        - quote_expires_at
+        - requires_confirmation
+      properties:
+        workflow:
+          type: string
+          const: flower_subscription
+        proposal:
+          $ref: '#/components/schemas/FlowerSubscriptionProposal'
+        quote_token:
+          type: string
+        quote_expires_at:
+          type: string
+          format: date-time
+        requires_confirmation:
+          type: boolean
+          const: true
+    FlowerSubscriptionProposal:
+      type: object
+      required:
+        - workflow
+        - provider
+        - live_order
+        - merchant
+        - product
+        - subscription
+        - delivery_destination_ref
+        - cadence
+        - commitment_deliveries
+        - price_per_delivery_cad
+        - maximum_per_delivery_cad
+        - currency
+        - requires_checkout
+        - checkout_url
+      properties:
+        workflow:
+          type: string
+          const: flower_subscription
+        provider:
+          type: string
+          const: vj_shopify_checkout
+        live_order:
+          type: boolean
+          const: false
+        merchant:
+          $ref: '#/components/schemas/FlowerMerchant'
+        product:
+          $ref: '#/components/schemas/FlowerProduct'
+        subscription:
+          $ref: '#/components/schemas/FlowerSubscriptionTerms'
+        delivery_destination_ref:
+          type: string
+          const: wife_home
+        cadence:
+          type: string
+          const: monthly
+        commitment_deliveries:
+          type: integer
+          const: 3
+        price_per_delivery_cad:
+          type: number
+          maximum: 80
+        maximum_per_delivery_cad:
+          type: number
+          const: 80
+        currency:
+          type: string
+          const: CAD
+        requires_checkout:
+          type: boolean
+          const: true
+        checkout_url:
+          type: string
+          format: uri
+    FlowerMerchant:
+      type: object
+      required: [id, name, location]
+      properties:
+        id:
+          type: string
+          const: vj-plant-shop
+        name:
+          type: string
+          const: V&J Plant Shop
+        location:
+          type: string
+    FlowerProduct:
+      type: object
+      required: [id, title, variant_id, variant_title]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          const: Classic Floral Subscription
+        variant_id:
+          type: integer
+        variant_title:
+          type: string
+          const: 3 Months
+    FlowerSubscriptionTerms:
+      type: object
+      required: [selling_plan_id, name, frequency]
+      properties:
+        selling_plan_id:
+          type: integer
+        name:
+          type: string
+          const: Monthly (3 Month)
+        frequency:
+          type: string
+          const: monthly
+    FlowerCheckoutResult:
+      type: object
+      required:
+        - workflow
+        - status
+        - live_order
+        - merchant
+        - product
+        - subscription
+        - delivery_destination_ref
+        - commitment_deliveries
+        - price_per_delivery_cad
+        - maximum_per_delivery_cad
+        - currency
+        - checkout_url
+        - checkout_instructions
+      properties:
+        idempotent_replay:
+          type: boolean
+        workflow:
+          type: string
+          const: flower_subscription
+        status:
+          type: string
+          const: checkout_required
+        live_order:
+          type: boolean
+          const: false
+        merchant:
+          $ref: '#/components/schemas/FlowerMerchant'
+        product:
+          $ref: '#/components/schemas/FlowerProduct'
+        subscription:
+          $ref: '#/components/schemas/FlowerSubscriptionTerms'
+        delivery_destination_ref:
+          type: string
+          const: wife_home
+        commitment_deliveries:
+          type: integer
+          const: 3
+        price_per_delivery_cad:
+          type: number
+          maximum: 80
+        maximum_per_delivery_cad:
+          type: number
+          const: 80
+        currency:
+          type: string
+          const: CAD
+        checkout_url:
+          type: string
+          format: uri
+        checkout_instructions:
+          type: string
