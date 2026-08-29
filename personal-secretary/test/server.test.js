@@ -11,7 +11,7 @@ function routePaths(app) {
     }));
 }
 
-test('server registers preserved haircut, bakery, and generic workflow routes', () => {
+test('server registers preserved haircut, bakery, flower, and generic workflow routes', () => {
   const { app } = createApp({
     config: { apiKey: 'test-key', port: 0 },
     engine: {},
@@ -25,6 +25,8 @@ test('server registers preserved haircut, bakery, and generic workflow routes', 
     { path: '/v1/book', methods: ['post'] },
     { path: '/v1/bakery/delivery-quote', methods: ['post'] },
     { path: '/v1/bakery/order', methods: ['post'] },
+    { path: '/v1/flowers/subscription-quote', methods: ['post'] },
+    { path: '/v1/flowers/prepare-checkout', methods: ['post'] },
     { path: '/v1/workflows/:workflowId/quote', methods: ['post'] },
     { path: '/v1/workflows/:workflowId/execute', methods: ['post'] },
   ]);
