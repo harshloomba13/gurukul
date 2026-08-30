@@ -61,6 +61,7 @@ test('flower workflow quotes the approved monthly plan under the budget cap', as
   assert.equal(quote.proposal.price_per_delivery_cad, 71.99);
   assert.equal(quote.proposal.maximum_per_delivery_cad, 80);
   assert.equal(quote.proposal.live_order, false);
+  assert.ok(quote.quote_token.length < 700, `Expected compact quote token, got ${quote.quote_token.length} chars`);
 });
 
 test('flower execution rechecks the catalog and returns checkout_required without placing an order', async () => {
