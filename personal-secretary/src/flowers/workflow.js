@@ -1,5 +1,9 @@
 const { WorkflowError } = require('../workflows/errors');
-const { validateFlowerProposal, validateFlowerRequest } = require('./domain');
+const {
+  createConfiguredFlowerProposal,
+  validateFlowerProposal,
+  validateFlowerRequest,
+} = require('./domain');
 
 function createFlowerSubscriptionWorkflow({ config, provider }) {
   return {
@@ -16,6 +20,22 @@ function createFlowerSubscriptionWorkflow({ config, provider }) {
 
     validateProposal(proposal) {
       validateFlowerProposal(proposal, config);
+    },
+
+    toQuotePayload(basePayload, proposal) {
+      return {
+        ...basePayload,
+        flower_quote: {
+          delivery_destination_ref: proposal.delivery_destination_ref,
+          price_per_delivery_cad: proposal.price_per_delivery_cad,
+        },
+      };
+    },
+
+    fromQuotePayload(payload) {
+      return createConfiguredFlowerProposal({
+        delivery_destination_ref: payload.flower_quote?.delivery_destination_ref,
+      }, payload.flower_quote?.price_per_delivery_cad, config);
     },
 
     formatQuoteResponse({ proposal, quoteToken, quoteExpiresAt }) {

@@ -86,8 +86,7 @@ function findConfiguredCatalogSelection(catalog, config) {
   return { priceCents };
 }
 
-function buildFlowerProposal(request, catalog, config) {
-  const { priceCents } = findConfiguredCatalogSelection(catalog, config);
+function createConfiguredFlowerProposal(request, pricePerDeliveryCad, config) {
   return {
     workflow: 'flower_subscription',
     provider: 'vj_shopify_checkout',
@@ -107,12 +106,17 @@ function buildFlowerProposal(request, catalog, config) {
     delivery_destination_ref: request.delivery_destination_ref,
     cadence: config.cadence,
     commitment_deliveries: config.commitmentDeliveries,
-    price_per_delivery_cad: fromCents(priceCents),
+    price_per_delivery_cad: pricePerDeliveryCad,
     maximum_per_delivery_cad: config.spendingLimitCad,
     currency: 'CAD',
     requires_checkout: true,
     checkout_url: config.product.checkoutUrl,
   };
+}
+
+function buildFlowerProposal(request, catalog, config) {
+  const { priceCents } = findConfiguredCatalogSelection(catalog, config);
+  return createConfiguredFlowerProposal(request, fromCents(priceCents), config);
 }
 
 function validateFlowerProposal(proposal, config) {
@@ -166,6 +170,7 @@ function validateFlowerProposal(proposal, config) {
 
 module.exports = {
   buildFlowerProposal,
+  createConfiguredFlowerProposal,
   validateFlowerProposal,
   validateFlowerRequest,
 };
