@@ -14,7 +14,8 @@ The first prototype should:
 - show the score as a readiness band with a short explanation of the strongest and weakest categories;
 - track score changes after profile imports, manual edits, feedback updates, or mentor/recruiter review notes;
 - recommend the next best profile actions based on the largest weighted readiness gaps;
-- preserve enough scoring context to explain why the score changed.
+- preserve enough scoring context to explain why the score changed;
+- keep analytics events focused on scoring metadata instead of raw resume, LinkedIn, or review content.
 
 ## Out Of Scope
 
@@ -25,7 +26,8 @@ The first prototype should not:
 - automatically submit resumes, LinkedIn updates, or job applications;
 - scrape private LinkedIn data without explicit user action;
 - compare users against named peers or expose another user's profile signals;
-- calculate interview readiness scoring, which remains part of Mock Exams & Interviews.
+- calculate interview readiness scoring, which remains part of Mock Exams & Interviews;
+- expand or replace the product scope defined in the root README.
 
 ## Supporting Docs
 

@@ -13,6 +13,7 @@ This model defines how the first prototype calculates the profile readiness scor
 | Mentor/recruiter review | 10% | Incorporates optional qualitative feedback from a mentor or recruiter. |
 
 Weights must sum to 100%. Category scores use a 0 to 100 scale before weighting.
+The first prototype should treat these weights as `calculation_version` 1 so future model changes can be explained in score history without rewriting older scores.
 
 ## Inputs
 
@@ -64,3 +65,4 @@ The interface should display both the numeric score and the readiness band. Reco
 - Target role changes: recalculate role relevance inputs and create a score history entry explaining that the target role changed.
 - Duplicate imports: ignore exact duplicate resume or LinkedIn imports and do not create a new score-change event.
 - Low confidence findings: include the score, but show that recommendations are based on limited evidence.
+- Invalid category values: clamp category scores to the 0 to 100 range before applying weights and flag the recalculation for review.

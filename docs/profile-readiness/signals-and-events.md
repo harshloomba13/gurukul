@@ -1,4 +1,4 @@
-# Profile Readiness Signals And Events
+# Profile Readiness Signals and Events
 
 This document defines the first-prototype tracking events for profile completion, readiness recalculation, and recommendation interactions. Events should help explain score changes and support product analytics without storing unnecessary private profile content.
 
@@ -8,6 +8,7 @@ This document defines the first-prototype tracking events for profile completion
 - Use stable user, profile, and score identifiers supplied by the application layer.
 - Include source and confidence fields when a score or recommendation depends on inferred data.
 - Emit events after the user completes an action or the system completes a recalculation.
+- Keep event names scoped with the `profile_readiness_` prefix so they remain distinct from roadmap, mock interview, or salary negotiation events.
 
 ## Shared Properties
 
@@ -164,4 +165,4 @@ Properties:
 
 ## Privacy Expectations
 
-Events must not include raw resume text, raw LinkedIn profile text, recruiter notes, mentor notes, email addresses, phone numbers, or external profile URLs. Store references to internal document or review identifiers when later inspection is needed.
+Events must not include raw resume text, raw LinkedIn profile text, recruiter notes, mentor notes, email addresses, phone numbers, or external profile URLs. Store references to internal document or review identifiers when later inspection is needed, and rely on application permissions before resolving those references.
